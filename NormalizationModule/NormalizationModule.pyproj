@@ -35,6 +35,7 @@
     <Compile Include="app\mark2cure\dataaccess.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="app\mark2cure\matcher.py" />
     <Compile Include="app\mark2cure\__init__.py">
       <SubType>Code</SubType>
     </Compile>
@@ -68,6 +69,7 @@
     <Content Include="annotationFiles\group 27.xml" />
     <Content Include="annotationFiles\group 28.xml" />
     <Content Include="app\templates\app\index.html" />
+    <Content Include="descriptors.pickle" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />

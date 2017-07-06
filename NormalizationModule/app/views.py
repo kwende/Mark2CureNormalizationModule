@@ -8,7 +8,6 @@ from django.template import RequestContext
 from datetime import datetime
 import os
 import app.mark2cure.dataaccess
-#from mark2cure import dataaccess
 
 def home(request):
     """Renders the home page."""

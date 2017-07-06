@@ -6,20 +6,22 @@ from django.shortcuts import render
 from django.http import HttpRequest
 from django.template import RequestContext
 from datetime import datetime
-from mark2cure import dataaccess
+import os
+import app.mark2cure.dataaccess
+#from mark2cure import dataaccess
 
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
-
-    randomAnnotation = mark2cure.dataaccess.GetRandomAnnotation()
+    cwd = os.getcwd()
+    annotation = app.mark2cure.dataaccess.GetRandomAnnotation()
 
     return render(
         request,
         'app/index.html',
         {
-            'title':'Home Page',
-            'message':'test'
+            'title':annotation,
+            'message':annotation
         }
     )
 

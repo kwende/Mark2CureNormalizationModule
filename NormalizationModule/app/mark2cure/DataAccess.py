@@ -2,7 +2,7 @@ from os import listdir
 from os.path import isfile, join
 import random
 from NormalizationModule.settings import BASE_DIR
-import lxml
+import lxml.etree
 
 def RandomlySelectFile(directoryPath):
     fullFiles = [join(directoryPath, f) for f in listdir(directoryPath) if isfile(join(directoryPath, f))]

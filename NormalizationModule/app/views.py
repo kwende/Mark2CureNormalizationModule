@@ -8,12 +8,15 @@ from django.template import RequestContext
 from datetime import datetime
 import os
 import app.mark2cure.dataaccess
+import app.mark2cure.matcher
 
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
     cwd = os.getcwd()
     annotation = app.mark2cure.dataaccess.GetRandomAnnotation()
+
+    app.mark2cure.matcher.FindRecommendations()
 
     return render(
         request,

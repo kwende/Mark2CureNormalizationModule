@@ -6,21 +6,30 @@ from django.shortcuts import render
 from django.http import HttpRequest
 from django.template import RequestContext
 from datetime import datetime
-import os
+from os import path, getcwd
 import NormalizationModule.mark2cure.dataaccess
-import sys
+from NormalizationModule.mark2cure.matcher import MeshRecord, FindRecommendations, Mark2CureQuery, ReadMeshRecordsFromDisk, TFIDF
 #import app.mark2cure.matcher
 
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
-    annotation = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
+    annotationText, passageText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
+
+    desciptorPath = path.join(getcwd(), 'descriptors.pickle')
+
+    query = Mark2CureQuery(annotationText, passageText)
+    meshRecords = ReadMeshRecordsFromDisk(desciptorPath)
+    tfidf = TFIDF()
+    tfidf.TrainModel(meshRecords)
+    recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
+
     return render(
         request,
         'app/index.html',
         {
-            'title':annotation,
-            'message':annotation
+            'title':annotationText,
+            'message':recommendations[0]
         }
     )
 

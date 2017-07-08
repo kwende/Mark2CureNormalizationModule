@@ -13,7 +13,11 @@ def RandomlySelectFile(directoryPath):
 def GetRandomAnnotation():
     randFile = RandomlySelectFile(join(BASE_DIR, 'annotationFiles'))
     tree = lxml.etree.parse(randFile)
-    annotations = tree.xpath(".//document/passage/annotation/infon[@key='type' and text() = 'disease']/../text/text()")
+    annotations = tree.xpath(".//document/passage/annotation/infon[@key='type' and text() = 'disease']/../text")
     randInt = random.randint(0, len(annotations)-1)
+    annotation = annotations[randInt]
 
-    return annotations[randInt]
+    passageText = annotation.xpath("../../text/text()")
+    annotationText = annotation.xpath("text()")
+
+    return passageText, annotationText

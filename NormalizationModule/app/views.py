@@ -26,7 +26,7 @@ def home(request):
 
     match = "None found"
     if len(recommendations) > 0:
-        match = recommendations[0].MainLine
+        match = ",".join([r.MainLine for r in recommendations])
 
     return render(request,
         'app/index.html',

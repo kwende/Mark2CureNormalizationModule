@@ -10,7 +10,8 @@ from os import path, getcwd
 import NormalizationModule.mark2cure.dataaccess
 import NormalizationModule.mark2cure.matcher
 from NormalizationModule.mark2cure.matcher import MeshRecord, FindRecommendations, Mark2CureQuery, ReadMeshRecordsFromDisk, TFIDF
-#import app.mark2cure.matcher
+import app.forms
+
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
@@ -24,15 +25,16 @@ def home(request):
     tfidf.TrainModel(meshRecords)
     recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
 
-    match = "None found"
-    if len(recommendations) > 0:
-        match = ",".join([r.MainLine for r in recommendations])
+    matches = [r.MainLine for r in recommendations]
+
+    form = app.forms.RecommendationSelectForm(matches)
 
     return render(request,
         'app/index.html',
         {
-            'title':annotationText,
-            'match':match
+            'annotationText':annotationText[0],
+            'matches':matches,
+            'form': form
         })
 
 def contact(request):

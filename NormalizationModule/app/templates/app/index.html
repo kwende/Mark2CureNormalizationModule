@@ -4,7 +4,16 @@
 
 <div>How well did we match the annotation to a corresponding medical database entry?</div>
 
-<h2>Entry: "{{ title }}".</h2>
-<h2>We matched: "{{ match }}".</h2>
+<h2>Entry: "{{ annotationText }}".</h2>
+<h2>We matched:</h2>
+    <ul>
+        {% for f in matches %}
+            <li>{{f}}</li>
+        {% endfor %}
+    </ul>
 
+    {% for recommendation in form.recommendations %}
+        {{recommendation.choice_label}}
+        <span class="radio">{{ choice.tag }}</span>
+    {% endfor %}
 {% endblock %}

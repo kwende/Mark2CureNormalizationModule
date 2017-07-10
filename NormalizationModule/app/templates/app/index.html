@@ -6,14 +6,5 @@
 
 <h2>Entry: "{{ annotationText }}".</h2>
 <h2>We matched:</h2>
-    <ul>
-        {% for f in matches %}
-            <li>{{f}}</li>
-        {% endfor %}
-    </ul>
-
-    {% for recommendation in form.recommendations %}
-        {{recommendation.choice_label}}
-        <span class="radio">{{ choice.tag }}</span>
-    {% endfor %}
+    {{ form }}
 {% endblock %}

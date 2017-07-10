@@ -25,15 +25,16 @@ def home(request):
     tfidf.TrainModel(meshRecords)
     recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
 
-    matches = [r.MainLine for r in recommendations]
+    choices = []
+    for r in recommendations:
+        choices.append((r.MainLine,r.MainLine))
 
-    form = app.forms.RecommendationSelectForm(matches)
+    form = app.forms.RecommendationSelectForm(choices = choices)
 
     return render(request,
         'app/index.html',
         {
             'annotationText':annotationText[0],
-            'matches':matches,
             'form': form
         })
 

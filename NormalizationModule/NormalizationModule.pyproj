@@ -67,6 +67,7 @@
     <Content Include="annotationFiles\group 26.xml" />
     <Content Include="annotationFiles\group 27.xml" />
     <Content Include="annotationFiles\group 28.xml" />
+    <Content Include="app\templates\app\thanks.html" />
     <Content Include="app\templates\app\index.html" />
     <Content Include="NormalizationModule\descriptors.pickle" />
     <Content Include="requirements.txt" />

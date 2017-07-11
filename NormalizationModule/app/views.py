@@ -3,7 +3,7 @@ Definition of views.
 """
 
 from django.shortcuts import render
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect, HttpResponse, QueryDict
 from django.template import RequestContext
 from datetime import datetime
 from os import path, getcwd
@@ -17,6 +17,18 @@ def home(request):
     assert isinstance(request, HttpRequest)
 
     if request.method == "POST":
+        if 'perfect_match' in request.POST:
+            return HttpResponseRedirect('/thanks/')
+        if 'partial_match' in request.POST:
+            dict = QueryDict("", mutable =True)
+            dict['test'] = 'value'
+            queryString = dict.urlencode()
+            # TODO: create a hidden field for the item that was being matched. 
+            # then go through and pass it. 
+            return HttpResponseRedirect('/thanks/?' + queryString)
+        if 'no_match' in request.POST:
+            return
+
         return HttpResponseRedirect('/thanks/')
     else:
         passageText, annotationText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
@@ -41,6 +53,9 @@ def home(request):
                 'annotationText':annotationText[0],
                 'form': form
             })
+
+def thanks(request):
+    return render(request, 'app/thanks.html', {})
 
 def contact(request):
     """Renders the contact page."""

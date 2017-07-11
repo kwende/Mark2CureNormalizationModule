@@ -8,8 +8,8 @@
     <form action="" method="post">
         {% csrf_token %}
         {{ form }}
-        <input type="submit" name="newsletter_sub" value="Perfect Match" />
-        <input type="submit" name="newsletter_unsub" value="Partial Match" />
-        <input type="submit" name="newsletter_unsub" value="No match" />
+        <input type="submit" name="perfect_match" value="Perfect Match" />
+        <input type="submit" name="partial_match" value="Partial Match" />
+        <input type="submit" name="no_match" value="No match" />
     </form>
 {% endblock %}

@@ -15,28 +15,32 @@ import app.forms
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
-    passageText, annotationText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
-    desciptorPath = path.join(getcwd(), 'descriptors.pickle')
+    if request.method == "POST":
+        return HttpResponseRedirect('/thanks/')
+    else:
+        passageText, annotationText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
-    query = Mark2CureQuery(annotationText[0], passageText[0])
-    meshRecords = ReadMeshRecordsFromDisk(desciptorPath)
-    tfidf = TFIDF()
-    tfidf.TrainModel(meshRecords)
-    recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
+        desciptorPath = path.join(getcwd(), 'descriptors.pickle')
 
-    choices = []
-    for r in recommendations:
-        choices.append((r.MainLine,r.MainLine))
+        query = Mark2CureQuery(annotationText[0], passageText[0])
+        meshRecords = ReadMeshRecordsFromDisk(desciptorPath)
+        tfidf = TFIDF()
+        tfidf.TrainModel(meshRecords)
+        recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
 
-    form = app.forms.RecommendationSelectForm(choices = choices)
+        choices = []
+        for r in recommendations:
+            choices.append((r.MainLine,r.MainLine))
 
-    return render(request,
-        'app/index.html',
-        {
-            'annotationText':annotationText[0],
-            'form': form
-        })
+        form = app.forms.RecommendationSelectForm(choices = choices)
+
+        return render(request,
+            'app/index.html',
+            {
+                'annotationText':annotationText[0],
+                'form': form
+            })
 
 def contact(request):
     """Renders the contact page."""

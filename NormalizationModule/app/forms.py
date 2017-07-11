@@ -7,7 +7,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import ugettext_lazy as _
 
 class RecommendationSelectForm(forms.Form):
-    recommendations = forms.ChoiceField(choices =[], widget=forms.RadioSelect())
+    recommendations = forms.ChoiceField(label="Matches we found:", choices =[], widget=forms.RadioSelect())
 
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop('choices', None)

@@ -4,7 +4,12 @@
 
 <div>How well did we match the annotation to a corresponding medical database entry?</div>
 
-<h2>Entry: "{{ annotationText }}".</h2>
-<h2>We matched:</h2>
-    {{ form }}
+<h2>Annotation: "{{ annotationText }}".</h2>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" name="newsletter_sub" value="Perfect Match" />
+        <input type="submit" name="newsletter_unsub" value="Partial Match" />
+        <input type="submit" name="newsletter_unsub" value="No match" />
+    </form>
 {% endblock %}

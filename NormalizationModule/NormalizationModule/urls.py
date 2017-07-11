@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^contact$', app.views.contact, name='contact'),
     url(r'^about', app.views.about, name='about'),
     url(r'^thanks', app.views.thanks, name='thanks'),
+    url(r'^why', app.views.why, name='why'),
     url(r'^logout$',
         django.contrib.auth.views.logout,
         {

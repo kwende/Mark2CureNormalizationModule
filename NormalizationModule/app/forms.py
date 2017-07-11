@@ -8,9 +8,12 @@ from django.utils.translation import ugettext_lazy as _
 
 class RecommendationSelectForm(forms.Form):
     recommendations = forms.ChoiceField(label="Matches we found:", choices =[], widget=forms.RadioSelect())
+    annotation = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop('choices', None)
+
         super(RecommendationSelectForm, self).__init__(*args, **kwargs)
+
         if choices is not None:
             self.fields['recommendations'].choices = choices

@@ -21,11 +21,12 @@ def home(request):
             return HttpResponseRedirect('/thanks/')
         if 'partial_match' in request.POST:
             dict = QueryDict("", mutable =True)
-            dict['test'] = 'value'
+            dict['annotationText'] = request.POST['annotationText']
+            dict['recommendation'] = request.POST['recommendations']
             queryString = dict.urlencode()
             # TODO: create a hidden field for the item that was being matched. 
             # then go through and pass it. 
-            return HttpResponseRedirect('/thanks/?' + queryString)
+            return HttpResponseRedirect('/why/?' + queryString)
         if 'no_match' in request.POST:
             return
 
@@ -53,6 +54,14 @@ def home(request):
                 'annotationText':annotationText[0],
                 'form': form
             })
+
+def why(request):
+
+    return render(request, "app/why.html", 
+                  {
+                      'annotationText' : request.GET['annotationText'],
+                      'recommendation' : request.GET['recommendation']
+                  })
 
 def thanks(request):
     return render(request, 'app/thanks.html', {})

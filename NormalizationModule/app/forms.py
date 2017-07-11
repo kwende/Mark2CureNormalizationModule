@@ -17,3 +17,14 @@ class RecommendationSelectForm(forms.Form):
 
         if choices is not None:
             self.fields['recommendations'].choices = choices
+
+class WhyOnlyPartialMatchForm(forms.Form):
+    reasons = forms.ChoiceField(label="Choices:", choices=[], widget=forms.RadioSelect())
+
+    def __init__(self, *args, **kwargs):
+        choices = kwargs.pop('choices', None)
+
+        super(WhyOnlyPartialMatchForm, self).__init__(*args, **kwargs)
+
+        if choices is not None:
+            self.fields['reasons'].choices = choices

@@ -70,7 +70,7 @@
     <Content Include="app\templates\app\why.html" />
     <Content Include="app\templates\app\thanks.html" />
     <Content Include="app\templates\app\index.html" />
-    <Content Include="NormalizationModule\descriptors.pickle" />
+    <Content Include="descriptors.pickle" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />

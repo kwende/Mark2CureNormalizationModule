@@ -57,10 +57,19 @@ def home(request):
 
 def why(request):
 
+    annotationText = request.GET['annotationText']
+    recommendation = request.GET['recommendation']
+
+    option1 = "Because %s is more specific than %s" % (annotationText, recommendation)
+    option2 = "Because %s is less specific than %s" % (annotationText, recommendation)
+
+    form = app.forms.WhyOnlyPartialMatchForm(choices = [(0, option1), (1 , option2)])
+
     return render(request, "app/why.html", 
                   {
                       'annotationText' : request.GET['annotationText'],
-                      'recommendation' : request.GET['recommendation']
+                      'recommendation' : request.GET['recommendation'],
+                      'form' : form
                   })
 
 def thanks(request):
@@ -85,5 +94,5 @@ def about(request):
         {
             'title':'About',
             'message':'Your application description page.',
-            'year':datetime.now().year,
+            'year':datetime.now().year, 
         })

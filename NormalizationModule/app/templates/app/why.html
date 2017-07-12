@@ -6,6 +6,10 @@
 
 Why is "{{recommendation}}" a partial match for "{{annotationText}}"?
 
-{{form}}
+<form method="POST" action="">
+    {% csrf_token %}
+    {{form}}
+    <input type="submit" name="reason_for_partial" value="Select" />
+</form>
 
 {% endblock %}

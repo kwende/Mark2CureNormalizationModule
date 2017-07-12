@@ -57,20 +57,32 @@ def home(request):
 
 def why(request):
 
-    annotationText = request.GET['annotationText']
-    recommendation = request.GET['recommendation']
+    if request.method == "POST":
+        reason = int(request.POST['reasons'])
+        if reason == 0:
+            return HttpResponseRedirect('/thanks/')
+        elif reason == 1:
+            return HttpResponseRedirect('/thanks/')
+        elif reason == 2:
+            return
+        else:
+            return
+    else:
+        annotationText = request.GET['annotationText']
+        recommendation = request.GET['recommendation']
 
-    option1 = "Because %s is more specific than %s" % (annotationText, recommendation)
-    option2 = "Because %s is less specific than %s" % (annotationText, recommendation)
+        option1 = "Because '%s' is more specific than '%s'" % (annotationText, recommendation)
+        option2 = "Because '%s' is less specific than '%s'" % (annotationText, recommendation)
+        option3 = "Because '%s' is a compound term and must be broken up further." % (recommendation)
 
-    form = app.forms.WhyOnlyPartialMatchForm(choices = [(0, option1), (1 , option2)])
-
-    return render(request, "app/why.html", 
-                  {
-                      'annotationText' : request.GET['annotationText'],
-                      'recommendation' : request.GET['recommendation'],
-                      'form' : form
-                  })
+        form = app.forms.WhyOnlyPartialMatchForm(choices = [(0, option1), (1 , option2), (2, option3)])
+        
+        return render(request, "app/why.html", 
+                      {
+                          'annotationText' : request.GET['annotationText'],
+                          'recommendation' : request.GET['recommendation'],
+                          'form' : form
+                      })
 
 def thanks(request):
     return render(request, 'app/thanks.html', {})

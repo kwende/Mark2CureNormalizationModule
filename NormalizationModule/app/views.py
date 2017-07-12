@@ -24,8 +24,6 @@ def home(request):
             dict['annotationText'] = request.POST['annotationText']
             dict['recommendation'] = request.POST['recommendations']
             queryString = dict.urlencode()
-            # TODO: create a hidden field for the item that was being matched. 
-            # then go through and pass it. 
             return HttpResponseRedirect('/why/?' + queryString)
         if 'no_match' in request.POST:
             return
@@ -54,17 +52,33 @@ def home(request):
                 'annotationText':annotationText[0],
                 'form': form
             })
+     
+def breakup(request):
+    if request.method == "POST":
+        return HttpResponseRedirect('/thanks/')
+    else:
+        form = app.forms.PartsForm()
+        return render(request, "app/breakup.html", 
+                      {
+                          "form" : form,
+                          "recommendation": request.GET['recommendation']
+                      })
 
 def why(request):
 
     if request.method == "POST":
+        
         reason = int(request.POST['reasons'])
         if reason == 0:
             return HttpResponseRedirect('/thanks/')
         elif reason == 1:
             return HttpResponseRedirect('/thanks/')
         elif reason == 2:
-            return
+            recommendation = request.GET['recommendation']
+            dict = QueryDict("", mutable =True)
+            dict['recommendation'] = recommendation
+            queryString = dict.urlencode()
+            return HttpResponseRedirect('/breakup/?' + queryString)
         else:
             return
     else:
@@ -86,25 +100,3 @@ def why(request):
 
 def thanks(request):
     return render(request, 'app/thanks.html', {})
-
-def contact(request):
-    """Renders the contact page."""
-    assert isinstance(request, HttpRequest)
-    return render(request,
-        'app/contact.html',
-        {
-            'title':'Contact',
-            'message':'Your contact page.',
-            'year':datetime.now().year,
-        })
-
-def about(request):
-    """Renders the about page."""
-    assert isinstance(request, HttpRequest)
-    return render(request,
-        'app/about.html',
-        {
-            'title':'About',
-            'message':'Your application description page.',
-            'year':datetime.now().year, 
-        })

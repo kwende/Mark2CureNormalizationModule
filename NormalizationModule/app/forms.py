@@ -28,3 +28,10 @@ class WhyOnlyPartialMatchForm(forms.Form):
 
         if choices is not None:
             self.fields['reasons'].choices = choices
+
+class PartsForm(forms.Form):
+    part1 = forms.CharField(required=True, widget=forms.TextInput())
+    part2 = forms.CharField(required=True, widget=forms.TextInput())
+    part3 = forms.CharField(required=False, widget=forms.TextInput())
+    part4 = forms.CharField(required=False, widget=forms.TextInput())
+    part5 = forms.CharField(required=False, widget=forms.TextInput())

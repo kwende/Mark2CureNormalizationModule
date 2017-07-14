@@ -2,15 +2,21 @@
 
 {% block content %}
 
-<div>How well did we match the annotation to a corresponding medical database entry?</div>
+<h3>We found {{ matchCount }} matches to '{{annotationText}}'</h3>
+<p style="font-weight:700">How well did we do? </p>
 
-<h2>Annotation: "{{ annotationText }}".</h2>
-    <form action="" method="post">
+    <form method="post" action="">
         {% csrf_token %}
-        {{ form }}
-        <input type="submit" name="perfect_match" value="Perfect Match" />
-        <input type="submit" name="partial_match" value="Partial Match" />
-        <input type="submit" name="no_match" value="No match" />
-        <input type="hidden" name="annotationText" value="{{ annotationText }}">
-    </form>
+        {% for match in matches %}
+            <p>
+                {{match.1}}
+                <select id="match_{{match.0|urlencode}}" name="match_{{match.0|urlencode}}">
+                    {% for dropDownOption in dropDownOptions %}
+                        <option value="{{dropDownOption.0}}">{{dropDownOption.1}}</option>
+                    {% endfor %}
+                </select>
+            </p>
+        {% endfor %}
+        <input type="submit" name="choose_how_well" value="Submit"/>
+     </form>
 {% endblock %}

@@ -1,0 +1,12 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+
+<h3>Why was this a poor match?</h3>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        {{form.as_p }}
+        <input type="submit" name="submit_reason" title="Submit"/>
+    </form>
+{% endblock %}

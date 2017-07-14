@@ -26,7 +26,7 @@ def home(request):
             queryString = dict.urlencode()
             return HttpResponseRedirect('/why/?' + queryString)
         if 'no_match' in request.POST:
-            return
+            return HttpResponseRedirect('/thanks/')
 
         return HttpResponseRedirect('/thanks/')
     else:
@@ -40,18 +40,38 @@ def home(request):
         tfidf.TrainModel(meshRecords)
         recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
 
-        choices = []
+        matches = []
         for r in recommendations:
-            choices.append((r.MainLine,r.MainLine))
+            matches.append((r.MainLine,r.MainLine))
 
-        form = app.forms.RecommendationSelectForm(choices = choices)
+        #form = app.forms.RecommendationSelectForm(choices = choices)
+
+        dropDownOptions = {}
+        dropDownOptions["PerfectMatch"] = "Perfect Match"
+        dropDownOptions["PartialMatch"] = "Partial Match"
+        dropDownOptions["BadMatch"] = "Bad Match"
 
         return render(request,
             'app/index.html',
             {
                 'annotationText':annotationText[0],
-                'form': form
+                'matches': matches,
+                'dropDownOptions' : dropDownOptions.items(),
+                'matchCount' : len(matches)
             })
+
+def nomatch(request):
+    annotationText = request.GET['annotationText']
+    recommendation = request.GET['recommendation']
+
+    option1 = "Because '%s' and '%s' are completely unrelated" % (annotationText, recommendation)
+    option2 = "Because '%s' is a compound term and must be broken up further." % (recommendation)
+
+    form = app.forms.WhyPoorMatchForm(choices = [(1,option1),(2,option2)])
+    return render(request, "app/nomatch.html", 
+    {
+       'form' : form
+    })
      
 def breakup(request):
     if request.method == "POST":

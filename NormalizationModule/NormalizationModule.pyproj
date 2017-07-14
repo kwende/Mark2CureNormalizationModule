@@ -73,6 +73,7 @@
     <Content Include="app\templates\app\thanks.html" />
     <Content Include="app\templates\app\index.html" />
     <Content Include="descriptors.pickle" />
+    <Content Include="NOTES.txt" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
     <Content Include="app\static\app\content\bootstrap.css" />

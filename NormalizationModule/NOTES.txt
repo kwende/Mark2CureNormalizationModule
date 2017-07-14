@@ -1,0 +1,7 @@
+To init django shell: 
+
+import os
+os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
+import django
+django.setup()
+from app.models import *

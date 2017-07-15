@@ -14,13 +14,15 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
     diseases = descTree.xpath(".//DescriptorRecord/TreeNumberList/TreeNumber[starts-with(text(), 'C')]/../../DescriptorName/String/text()")
     for disease in diseases:
         descriptorRecord = descTree.xpath('.//DescriptorRecord/DescriptorName/String[text()="' + disease + '"]/../..')[0]
-        synonymNames = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
+        syonyms = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term")
+        #synonymNames = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
         descriptorUI = descriptorRecord.xpath(".//DescriptorUI/text()")[0]
         descriptorUIs.append(descriptorUI)
 
         meshRecords.append(MeshRecord(MeshId = descriptorUI, Name = disease, IsSynonym = False, ParentMeshId = None))
 
-        for synonymName in synonymNames:
+        for synonym in syonyms:
+            synonymName = synonym
             if not synonymName == disease:
                 meshRecords.append(MeshRecord(MeshId = descriptorUI, Name = synonymName, IsSynonym = True, ParentMeshId = descriptorUI))
 
@@ -52,7 +54,8 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
         print("Finished " + str(num) + " of " + str(len(descriptorUIs)))
         num = num + 1
 
-    return meshRecords
+    print("Bulk saving...")
+    MeshRecord.objects.bulk_create(meshRecords)
 
 # Create your models here.
 class MeshRecord(models.Model):

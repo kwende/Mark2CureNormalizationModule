@@ -14,17 +14,18 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
     diseases = descTree.xpath(".//DescriptorRecord/TreeNumberList/TreeNumber[starts-with(text(), 'C')]/../../DescriptorName/String/text()")
     for disease in diseases:
         descriptorRecord = descTree.xpath('.//DescriptorRecord/DescriptorName/String[text()="' + disease + '"]/../..')[0]
-        syonyms = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term")
+        synonyms = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term")
         #synonymNames = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
         descriptorUI = descriptorRecord.xpath(".//DescriptorUI/text()")[0]
         descriptorUIs.append(descriptorUI)
 
         meshRecords.append(MeshRecord(MeshId = descriptorUI, Name = disease, IsSynonym = False, ParentMeshId = None))
 
-        for synonym in syonyms:
-            synonymName = synonym
+        for synonym in synonyms:
+            synonymName = synonym.xpath(".//String/text()")[0]
+            synonymId = synonym.xpath(".//TermUI/text()")[0]
             if not synonymName == disease:
-                meshRecords.append(MeshRecord(MeshId = descriptorUI, Name = synonymName, IsSynonym = True, ParentMeshId = descriptorUI))
+                meshRecords.append(MeshRecord(MeshId = synonymId, Name = synonymName, IsSynonym = True, ParentMeshId = descriptorUI))
 
         print("Finished " + str(num) + " of " + str(len(diseases)))
         num = num + 1
@@ -43,13 +44,15 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
                 existingSupplementalRecords.append(supplementalRecordUI)
 
                 disease = supplementalRecord.xpath(".//SupplementalRecordName/String/text()")[0]
-                synonymsToUse = supplementalRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
+                synonyms = supplementalRecord.xpath(".//ConceptList/Concept/TermList/Term")
                 
                 meshRecords.append(MeshRecord(MeshId = supplementalRecordUI, Name = disease, IsSynonym = False, ParentMeshId = None))
 
-                for synonymName in synonymsToUse:
+                for synonym in synonyms:
+                    synonymName = synonym.xpath(".//String/text()")[0]
+                    synonymId = synonym.xpath(".//TermUI/text()")[0]
                     if not synonymName == disease:
-                        meshRecords.append(MeshRecord(MeshId = supplementalRecordUI, Name = synonymName, IsSynonym = True, ParentMeshId = supplementalRecordUI))
+                        meshRecords.append(MeshRecord(MeshId = synonymId, Name = synonymName, IsSynonym = True, ParentMeshId = supplementalRecordUI))
         
         print("Finished " + str(num) + " of " + str(len(descriptorUIs)))
         num = num + 1

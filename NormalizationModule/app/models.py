@@ -15,6 +15,7 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
     for disease in diseases:
         descriptorRecord = descTree.xpath('.//DescriptorRecord/DescriptorName/String[text()="' + disease + '"]/../..')[0]
         synonyms = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term")
+        print("found " + str(len(synonyms)) + " synonyms")
         #synonymNames = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
         descriptorUI = descriptorRecord.xpath(".//DescriptorUI/text()")[0]
         descriptorUIs.append(descriptorUI)

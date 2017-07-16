@@ -3,7 +3,7 @@ from os.path import isfile, join
 import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
-from nlp import DiseaseRecord
+from NormalizationModule.mark2cure.nlp import DiseaseRecord
 
 
 def RandomlySelectFile(directoryPath):

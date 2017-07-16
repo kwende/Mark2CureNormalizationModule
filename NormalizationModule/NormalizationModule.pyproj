@@ -34,7 +34,7 @@
     <Compile Include="NormalizationModule\mark2cure\dataaccess.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NormalizationModule\mark2cure\matcher.py" />
+    <Compile Include="NormalizationModule\mark2cure\nlp.py" />
     <Compile Include="NormalizationModule\mark2cure\__init__.py">
       <SubType>Code</SubType>
     </Compile>
@@ -72,7 +72,6 @@
     <Content Include="app\templates\app\why.html" />
     <Content Include="app\templates\app\thanks.html" />
     <Content Include="app\templates\app\index.html" />
-    <Content Include="descriptors.pickle" />
     <Content Include="NOTES.txt" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
@@ -99,6 +98,7 @@
     <Content Include="app\static\app\scripts\respond.min.js" />
     <Content Include="app\static\app\scripts\_references.js" />
     <Content Include="app\templates\app\layout.html" />
+    <Content Include="trained.pickle" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.html">

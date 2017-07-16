@@ -118,7 +118,7 @@ class TFIDF:
                 if not line in matchedLines:
                     matchedLines.append(line)
 
-        return matchedRecords
+        return matchedLines
 
 def FindRecommendations(query, tfidf, numberOfRecommendations):
     
@@ -168,3 +168,5 @@ def TrainAndPickle(outputPath):
 
     with open(outputPath, 'wb') as fout:
         pickle.dump(tfidf, fout)
+
+

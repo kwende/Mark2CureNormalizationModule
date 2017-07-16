@@ -11,6 +11,7 @@ import NormalizationModule.mark2cure.dataaccess
 import NormalizationModule.mark2cure.nlp
 from NormalizationModule.mark2cure.nlp import DiseaseRecord, FindRecommendations, Mark2CureQuery, TFIDF
 import app.forms
+import pickle
 
 def home(request):
     """Renders the home page."""
@@ -32,17 +33,17 @@ def home(request):
     else:
         passageText, annotationText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
-        desciptorPath = path.join(getcwd(), 'descriptors.pickle')
+        tfidf = None
+        trainedPickle = path.join(getcwd(), 'trained.pickle')
+        with open(trainedPickle, 'rb') as fin:
+            tfidf = pickle.load(fin)
 
         query = Mark2CureQuery(annotationText[0], passageText[0])
-        diseaseRecords = ReaddiseaseRecordsFromDisk(desciptorPath)
-        tfidf = TFIDF()
-        tfidf.TrainModel(diseaseRecords)
-        recommendations = FindRecommendations(query, diseaseRecords, tfidf, 4)
+        recommendations = FindRecommendations(query, tfidf, 10)
 
         matches = []
         for r in recommendations:
-            matches.append((r.MainLine,r.MainLine))
+            matches.append((r,r))
 
         #form = app.forms.RecommendationSelectForm(choices = choices)
 

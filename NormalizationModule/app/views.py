@@ -8,8 +8,8 @@ from django.template import RequestContext
 from datetime import datetime
 from os import path, getcwd
 import NormalizationModule.mark2cure.dataaccess
-import NormalizationModule.mark2cure.matcher
-from NormalizationModule.mark2cure.matcher import MeshRecord, FindRecommendations, Mark2CureQuery, ReadMeshRecordsFromDisk, TFIDF
+import NormalizationModule.mark2cure.nlp
+from NormalizationModule.mark2cure.nlp import DiseaseRecord, FindRecommendations, Mark2CureQuery, TFIDF
 import app.forms
 
 def home(request):
@@ -35,10 +35,10 @@ def home(request):
         desciptorPath = path.join(getcwd(), 'descriptors.pickle')
 
         query = Mark2CureQuery(annotationText[0], passageText[0])
-        meshRecords = ReadMeshRecordsFromDisk(desciptorPath)
+        diseaseRecords = ReaddiseaseRecordsFromDisk(desciptorPath)
         tfidf = TFIDF()
-        tfidf.TrainModel(meshRecords)
-        recommendations = FindRecommendations(query, meshRecords, tfidf, 4)
+        tfidf.TrainModel(diseaseRecords)
+        recommendations = FindRecommendations(query, diseaseRecords, tfidf, 4)
 
         matches = []
         for r in recommendations:

@@ -5,3 +5,4 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
 import django
 django.setup()
 from app.models import *
+BuildDODRecordsFromDisk("C:/repos/HumanDiseaseOntology/src/ontology/releases/2017-06-13/doid.json")

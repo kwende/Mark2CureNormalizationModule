@@ -3,6 +3,8 @@ from os.path import isfile, join
 import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
+from nlp import DiseaseRecord
+
 
 def RandomlySelectFile(directoryPath):
     fullFiles = [join(directoryPath, f) for f in listdir(directoryPath) if isfile(join(directoryPath, f))]
@@ -21,3 +23,4 @@ def GetRandomAnnotation():
     annotationText = annotation.xpath("text()")
 
     return passageText, annotationText
+

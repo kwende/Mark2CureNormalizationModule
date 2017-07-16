@@ -1,11 +1,26 @@
 """
 Definition of models.
 """
+import json
 import lxml.etree
 from django.db import models
 
+def BuildDODRecordsFromDisk(jsonDodFilePath):
+    with open(jsonDodFilePath) as jsonFile:
+        jsonData = json.load(jsonFile)
+
+        dodRecords = []
+        for d in jsonData['graphs'][0]['nodes']:
+            if 'meta' in d and 'definition' in d['meta']:
+                dodRecords.append(DODRecord(DODId = d['id'], Name = d['lbl'], IsSynonym = False))
+                if 'synonyms' in d['meta']:
+                    for s in d['meta']['synonyms']:
+                        dodRecords.append(DODRecord(DODId = d['id'], Name = s['val'], IsSynonym = True))
+
+        DODRecord.objects.bulk_create(dodRecords)
+
 def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
-    meshRecords = []
+    diseaseRecords = []
     descriptorUIs = []
     descTree = lxml.etree.parse(xmlFilePath)
     
@@ -16,17 +31,18 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
         descriptorRecord = descTree.xpath('.//DescriptorRecord/DescriptorName/String[text()="' + disease + '"]/../..')[0]
         synonyms = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term")
         print("found " + str(len(synonyms)) + " synonyms")
-        #synonymNames = descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
+        #synonymNames =
+        #descriptorRecord.xpath(".//ConceptList/Concept/TermList/Term/String/text()")
         descriptorUI = descriptorRecord.xpath(".//DescriptorUI/text()")[0]
         descriptorUIs.append(descriptorUI)
 
-        meshRecords.append(MeshRecord(MeshId = descriptorUI, Name = disease, IsSynonym = False, ParentMeshId = None))
+        diseaseRecords.append(diseaseRecord(MeshId = descriptorUI, Name = disease, IsSynonym = False, ParentMeshId = None))
 
         for synonym in synonyms:
             synonymName = synonym.xpath(".//String/text()")[0]
             synonymId = synonym.xpath(".//TermUI/text()")[0]
             if not synonymName == disease:
-                meshRecords.append(MeshRecord(MeshId = synonymId, Name = synonymName, IsSynonym = True, ParentMeshId = descriptorUI))
+                diseaseRecords.append(diseaseRecord(MeshId = synonymId, Name = synonymName, IsSynonym = True, ParentMeshId = descriptorUI))
 
         print("Finished " + str(num) + " of " + str(len(diseases)))
         num = num + 1
@@ -47,19 +63,19 @@ def BuildMeshRecordsFromDisk(xmlFilePath, suppXmlFilePath):
                 disease = supplementalRecord.xpath(".//SupplementalRecordName/String/text()")[0]
                 synonyms = supplementalRecord.xpath(".//ConceptList/Concept/TermList/Term")
                 
-                meshRecords.append(MeshRecord(MeshId = supplementalRecordUI, Name = disease, IsSynonym = False, ParentMeshId = None))
+                diseaseRecords.append(MeshRecord(MeshId = supplementalRecordUI, Name = disease, IsSynonym = False, ParentMeshId = None))
 
                 for synonym in synonyms:
                     synonymName = synonym.xpath(".//String/text()")[0]
                     synonymId = synonym.xpath(".//TermUI/text()")[0]
                     if not synonymName == disease:
-                        meshRecords.append(MeshRecord(MeshId = synonymId, Name = synonymName, IsSynonym = True, ParentMeshId = supplementalRecordUI))
+                        diseaseRecords.append(MeshRecord(MeshId = synonymId, Name = synonymName, IsSynonym = True, ParentMeshId = supplementalRecordUI))
         
         print("Finished " + str(num) + " of " + str(len(descriptorUIs)))
         num = num + 1
 
     print("Bulk saving...")
-    MeshRecord.objects.bulk_create(meshRecords)
+    MeshRecord.objects.bulk_create(diseaseRecords)
 
 # Create your models here.
 class MeshRecord(models.Model):
@@ -67,3 +83,8 @@ class MeshRecord(models.Model):
     Name = models.TextField()
     IsSynonym = models.BooleanField()
     ParentMeshId = models.CharField(max_length=10, null=True)
+
+class DODRecord(models.Model):
+    DODId = models.CharField(max_length=128)
+    Name = models.TextField()
+    IsSynonym = models.BooleanField()

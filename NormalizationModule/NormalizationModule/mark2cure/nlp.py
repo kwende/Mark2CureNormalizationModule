@@ -13,6 +13,7 @@ import numpy as np
 import os.path
 from nltk.metrics import *
 from app.models import DODRecord, MeshRecord
+from django.db.models import Q
 
 class DiseaseRecord:
 
@@ -97,7 +98,7 @@ class TFIDF:
             lineToAdd = diseaseRecord.Line.lower().translate(translator)
             if not lineToAdd in linesAlreadyAdded:
                 self.Corpus.append(lineToAdd)
-                linesAlreadyAdded.append(lineToAdd)
+                linesAlreadyAdded.append(diseaseRecord.Line)
 
         self.Model = self.Vectorizer.fit_transform(self.Corpus)
         self.Lines = linesAlreadyAdded
@@ -114,11 +115,48 @@ class TFIDF:
             bestChoicesIndices = np.argpartition(resultMatrix, -numberToReturn)[-numberToReturn:]
 
             for bestChoiceIndex in bestChoicesIndices:
-                line = self.Lines[bestChoiceIndex]
-                if not line in matchedLines:
-                    matchedLines.append(line)
+                grade = resultMatrix[bestChoiceIndex]
+                if grade > .3:
+                    line = self.Lines[bestChoiceIndex]
+                    if not line in matchedLines:
+                        matchedLines.append(line)
 
         return matchedLines
+
+def TrimUsingOntologyDatabases(recommendations):
+
+    #duplicate the list to be trimmed
+    trimmed = list(recommendations)
+
+    for recommendation in recommendations:
+        meshRecords = MeshRecord.objects.filter(Name = recommendation)
+
+        for meshRecord in meshRecords:
+            parentMeshId = None
+            name = meshRecord.Name
+            if not meshRecord.IsSynonym:
+                parentMeshId = meshRecord.MeshId
+            else:
+                parentMeshId = meshRecord.ParentMeshId
+
+            parentAndChildren = MeshRecord.objects.filter(Q(MeshId = parentMeshId) | Q(ParentMeshId = parentMeshId))
+            for parentOrChild in parentAndChildren:
+                toRemoveName = parentOrChild.Name
+                if not toRemoveName == name and toRemoveName in trimmed:
+                    trimmed.remove(toRemoveName)
+
+        dodRecords = DODRecord.objects.filter(Name = recommendation)
+
+        for dodRecord in dodRecords:
+            name = dodRecord.Name
+            parentAndChildren = DODRecord.objects.filter(DODId = dodRecord.DODId)
+            for parentOrChild in parentAndChildren:
+                toRemoveName = parentOrChild.Name
+                if not toRemoveName == name and toRemoveName in trimmed:
+                    trimmed.remove(toRemoveName)
+
+    return trimmed
+
 
 def FindRecommendations(query, tfidf, numberOfRecommendations):
     

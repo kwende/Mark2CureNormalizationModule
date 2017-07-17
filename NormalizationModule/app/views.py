@@ -41,11 +41,15 @@ def home(request):
         query = Mark2CureQuery(annotationText[0], passageText[0])
         recommendations = FindRecommendations(query, tfidf, 10)
 
+        recommendations = NormalizationModule.mark2cure.nlp.TrimUsingOntologyDatabases(recommendations)
+
         matches = []
         for r in recommendations:
             matches.append((r,r))
 
         #form = app.forms.RecommendationSelectForm(choices = choices)
+
+
 
         dropDownOptions = {}
         dropDownOptions["PerfectMatch"] = "Perfect Match"

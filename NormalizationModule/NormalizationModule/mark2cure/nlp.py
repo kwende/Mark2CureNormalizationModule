@@ -93,15 +93,22 @@ class TFIDF:
         # we may have multiple ontologies.  this prevents
         # overrepresentation of the same text
         linesAlreadyAdded = []
+        rawLinesAdded = []
 
         for diseaseRecord in diseaseRecords:
             lineToAdd = diseaseRecord.Line.lower().translate(translator)
             if not lineToAdd in linesAlreadyAdded:
                 self.Corpus.append(lineToAdd)
-                linesAlreadyAdded.append(diseaseRecord.Line)
+                rawLinesAdded.append(diseaseRecord.Line)
+                linesAlreadyAdded.append(lineToAdd)
+
+                if diseaseRecord.Line == "Ischemia":
+                    print("found Ischemia as " + lineToAdd)
+                elif diseaseRecord.Line == "ischemia":
+                    print("found ischemia as " + lineToAdd)
 
         self.Model = self.Vectorizer.fit_transform(self.Corpus)
-        self.Lines = linesAlreadyAdded
+        self.Lines = rawLinesAdded
 
         return
 
@@ -110,61 +117,98 @@ class TFIDF:
         matchMatrix = self.Vectorizer.transform([queryText.lower().translate(translator)])
         resultMatrix = ((matchMatrix * self.Model.T).A[0])
 
-        matchedLines = []
+        #exists1 = "ischemia" in self.Lines
+        #exists2 = "Ischemia" in self.Lines
+
+        matchedLines = {}
         if np.any(resultMatrix):
-            bestChoicesIndices = np.argpartition(resultMatrix, -numberToReturn)[-numberToReturn:]
+            if len(resultMatrix) < numberToReturn:
+                numberToReturn = len(resultMatrix)
+
+            bestChoicesIndices = np.argsort(resultMatrix)[-30:]
 
             for bestChoiceIndex in bestChoicesIndices:
                 grade = resultMatrix[bestChoiceIndex]
                 if grade > .3:
                     line = self.Lines[bestChoiceIndex]
                     if not line in matchedLines:
-                        matchedLines.append(line)
+                        matchedLines[line] = grade
 
         return matchedLines
 
-def TrimUsingOntologyDatabases(recommendations):
+def TrimUsingOntologyDatabases(recommendationTuples):
 
     #duplicate the list to be trimmed
-    trimmed = list(recommendations)
+    finalList = []
+    meshToIgnore = []
+    dodToIgnore = []
 
-    for recommendation in recommendations:
-        meshRecords = MeshRecord.objects.filter(Name = recommendation)
+    for recommendation, weight in recommendationTuples.items():
+        
+        bestMeshFamilyMember = ""
+        bestDODFamilyMember = ""
 
-        for meshRecord in meshRecords:
-            parentMeshId = None
-            name = meshRecord.Name
-            if not meshRecord.IsSynonym:
-                parentMeshId = meshRecord.MeshId
-            else:
-                parentMeshId = meshRecord.ParentMeshId
+        if not recommendation in meshToIgnore:
+            bestMeshScore = 0
 
-            parentAndChildren = MeshRecord.objects.filter(Q(MeshId = parentMeshId) | Q(ParentMeshId = parentMeshId))
-            for parentOrChild in parentAndChildren:
-                toRemoveName = parentOrChild.Name
-                if not toRemoveName == name and toRemoveName in trimmed:
-                    trimmed.remove(toRemoveName)
+            # is there a matching mesh record? 
+            meshRecords = MeshRecord.objects.filter(Name = recommendation)
+            for meshRecord in meshRecords:
 
-        dodRecords = DODRecord.objects.filter(Name = recommendation)
+                # prepare for finding the best of any family. 
+                bestMeshScore = weight
+                bestMeshFamilyMember = recommendation
 
-        for dodRecord in dodRecords:
-            name = dodRecord.Name
-            parentAndChildren = DODRecord.objects.filter(DODId = dodRecord.DODId)
-            for parentOrChild in parentAndChildren:
-                toRemoveName = parentOrChild.Name
-                if not toRemoveName == name and toRemoveName in trimmed:
-                    trimmed.remove(toRemoveName)
+                # get the whole family for this phrase
+                if not meshRecord.IsSynonym:
+                    parentMeshId = meshRecord.MeshId
+                else:
+                    parentMeshId = meshRecord.ParentMeshId
+                family = MeshRecord.objects.filter(Q(MeshId = parentMeshId) | Q(ParentMeshId = parentMeshId))
 
-    return trimmed
+                # find the highest weighted family member also in this list.
+                for member in family:
+                    if member.Name in recommendationTuples and recommendationTuples[member.Name] > bestMeshScore:
+                        # if we found one better, keep it. 
+                        bestMeshScore = recommendationTuples[member.Name]
+                        bestMeshFamilyMember = member.Name
+                    else:
+                        # otherwise, ignore this one when it comes up 
+                        meshToIgnore.append(member.Name)
+
+        if not recommendation in dodToIgnore:
+            bestDODScore = 0
+            
+            dodRecords = DODRecord.objects.filter(Name = recommendation)
+            for dodRecord in dodRecords:
+                family = DODRecord.objects.filter(DODId = dodRecord.DODId)
+                for member in family:
+                    if member.Name in recommendationTuples and recommendationTuples[member.Name] > bestDODScore:
+                        bestDODScore = recommendationTuples[member.Name]
+                        bestDODFamilyMember = member.Name
+                    else:
+                        dodToIgnore.append(member.Name)
+
+        if bestMeshFamilyMember == bestDODFamilyMember and bestMeshFamilyMember is not "" and not bestMeshFamilyMember in finalList:
+            # the same phrase is in both ontologies. 
+            finalList.append(bestMeshFamilyMember)
+        else:
+            # separate names in separate ontologies
+            if bestMeshFamilyMember is not "" and not bestMeshFamilyMember in finalList:
+                finalList.append(bestMeshFamilyMember)
+            if bestDODFamilyMember is not "" and not bestDODFamilyMember in finalList:
+                finalList.append(bestDODFamilyMember)
+
+    return finalList
 
 
 def FindRecommendations(query, tfidf, numberOfRecommendations):
     
-    diseaseRecordsToReturn = []
+    diseaseRecordsToReturn = {}
 
     # use if-idf to find best we can
     if len(diseaseRecordsToReturn) == 0:
-        diseaseRecordsToReturn = diseaseRecordsToReturn + tfidf.FindClosestMatches(query.Tag, numberOfRecommendations)
+        diseaseRecordsToReturn.update(tfidf.FindClosestMatches(query.Tag, numberOfRecommendations))
 
     # nothing?  is this an abbreviation?  Can we pull out its meaning
     # from the source text?
@@ -173,7 +217,7 @@ def FindRecommendations(query, tfidf, numberOfRecommendations):
         if matches:
             possibleMeaning = query.FindAbbreviationMeaningInSource(query.Tag)
             if possibleMeaning:
-                diseaseRecordsToReturn = diseaseRecordsToReturn + tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations)
+                diseaseRecordsToReturn.update(tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations))
             if len(diseaseRecordsToReturn) == 0: # still nothing!?
                 #is this dash-separated?
                 if "-" in query.Tag:
@@ -181,12 +225,12 @@ def FindRecommendations(query, tfidf, numberOfRecommendations):
                     for part in parts:
                         possibleMeaning = query.FindAbbreviationMeaningInSource(part)
                         if possibleMeaning:
-                            diseaseRecordsToReturn = diseaseRecordsToReturn + tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations)
+                            diseaseRecordsToReturn.update(tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations))
 
                     # STILL nothing!?!  Just try straight-up looking at the
                     # text.
                     for part in parts: 
-                        diseaseRecordsToReturn = diseaseRecordsToReturn + tfidf.FindClosestMatches(part, numberOfRecommendations)
+                        diseaseRecordsToReturn.update(tfidf.FindClosestMatches(part, numberOfRecommendations))
 
     return diseaseRecordsToReturn
 

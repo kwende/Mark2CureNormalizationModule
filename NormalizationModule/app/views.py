@@ -33,23 +33,22 @@ def home(request):
     else:
         passageText, annotationText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
+        passageText = [""]
+        annotationText = ["experimental galactosemia"]
+
         tfidf = None
         trainedPickle = path.join(getcwd(), 'trained.pickle')
         with open(trainedPickle, 'rb') as fin:
             tfidf = pickle.load(fin)
 
         query = Mark2CureQuery(annotationText[0], passageText[0])
-        recommendations = FindRecommendations(query, tfidf, 10)
+        recommendationsWithWeights = FindRecommendations(query, tfidf, 30)
 
-        recommendations = NormalizationModule.mark2cure.nlp.TrimUsingOntologyDatabases(recommendations)
+        recommendations = NormalizationModule.mark2cure.nlp.TrimUsingOntologyDatabases(recommendationsWithWeights)
 
         matches = []
         for r in recommendations:
             matches.append((r,r))
-
-        #form = app.forms.RecommendationSelectForm(choices = choices)
-
-
 
         dropDownOptions = {}
         dropDownOptions["PerfectMatch"] = "Perfect Match"

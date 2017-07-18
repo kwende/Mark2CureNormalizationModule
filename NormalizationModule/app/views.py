@@ -12,39 +12,41 @@ import NormalizationModule.mark2cure.nlp
 from NormalizationModule.mark2cure.nlp import DiseaseRecord, FindRecommendations, Mark2CureQuery, TFIDF
 import app.forms
 import pickle
+import urllib.parse
 
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
 
     if request.method == "POST":
-        if 'perfect_match' in request.POST:
-            return HttpResponseRedirect('/thanks/')
-        if 'partial_match' in request.POST:
-            dict = QueryDict("", mutable =True)
-            dict['annotationText'] = request.POST['annotationText']
-            dict['recommendation'] = request.POST['recommendations']
-            queryString = dict.urlencode()
-            return HttpResponseRedirect('/why/?' + queryString)
-        if 'no_match' in request.POST:
-            return HttpResponseRedirect('/thanks/')
+
+        for variable in request.POST:
+            if variable.startswith('match_'):
+                key = urllib.parse.unquote(variable).replace('match_', '')
+                value = request.POST[variable]
+
+                return
 
         return HttpResponseRedirect('/thanks/')
     else:
-        passageText, annotationText = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
+        # continue looping until we find something for which matches are identified. 
+        while True:
+            passageText, annotationText, documentId, annotationId = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
-        passageText = [""]
-        annotationText = ["experimental galactosemia"]
+            tfidf = None
+            trainedPickle = path.join(getcwd(), 'trained.pickle')
+            with open(trainedPickle, 'rb') as fin:
+                tfidf = pickle.load(fin)
 
-        tfidf = None
-        trainedPickle = path.join(getcwd(), 'trained.pickle')
-        with open(trainedPickle, 'rb') as fin:
-            tfidf = pickle.load(fin)
+            query = Mark2CureQuery(annotationText[0], passageText[0])
+            recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .45)
 
-        query = Mark2CureQuery(annotationText[0], passageText[0])
-        recommendationsWithWeights = FindRecommendations(query, tfidf, 30)
+            recommendations = NormalizationModule.mark2cure.nlp.TrimUsingOntologyDatabases(recommendationsWithWeights)
 
-        recommendations = NormalizationModule.mark2cure.nlp.TrimUsingOntologyDatabases(recommendationsWithWeights)
+            if len(recommendations) == 0:
+                NormalizationModule.mark2cure.dataaccess.SaveMatchRecordForNoMatches(documentId, annotationId)
+            else:
+                break
 
         matches = []
         for r in recommendations:
@@ -61,7 +63,8 @@ def home(request):
                 'annotationText':annotationText[0],
                 'matches': matches,
                 'dropDownOptions' : dropDownOptions.items(),
-                'matchCount' : len(matches)
+                'matchCount' : len(matches),
+                'passageText' : passageText[0]
             })
 
 def nomatch(request):

@@ -112,7 +112,7 @@ class TFIDF:
 
         return
 
-    def FindClosestMatches(self, queryText, numberToReturn):
+    def FindClosestMatches(self, queryText, numberToReturn, minimumGoodnessScore):
         translator = str.maketrans('', '', string.punctuation)
         matchMatrix = self.Vectorizer.transform([queryText.lower().translate(translator)])
         resultMatrix = ((matchMatrix * self.Model.T).A[0])
@@ -129,7 +129,7 @@ class TFIDF:
 
             for bestChoiceIndex in bestChoicesIndices:
                 grade = resultMatrix[bestChoiceIndex]
-                if grade > .3:
+                if grade > minimumGoodnessScore:
                     line = self.Lines[bestChoiceIndex]
                     if not line in matchedLines:
                         matchedLines[line] = grade
@@ -201,14 +201,13 @@ def TrimUsingOntologyDatabases(recommendationTuples):
 
     return finalList
 
-
-def FindRecommendations(query, tfidf, numberOfRecommendations):
+def FindRecommendations(query, tfidf, numberOfRecommendations, minimumGoodnessScore):
     
     diseaseRecordsToReturn = {}
 
     # use if-idf to find best we can
     if len(diseaseRecordsToReturn) == 0:
-        diseaseRecordsToReturn.update(tfidf.FindClosestMatches(query.Tag, numberOfRecommendations))
+        diseaseRecordsToReturn.update(tfidf.FindClosestMatches(query.Tag, numberOfRecommendations, minimumGoodnessScore))
 
     # nothing?  is this an abbreviation?  Can we pull out its meaning
     # from the source text?
@@ -217,7 +216,7 @@ def FindRecommendations(query, tfidf, numberOfRecommendations):
         if matches:
             possibleMeaning = query.FindAbbreviationMeaningInSource(query.Tag)
             if possibleMeaning:
-                diseaseRecordsToReturn.update(tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations))
+                diseaseRecordsToReturn.update(tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations, minimumGoodnessScore))
             if len(diseaseRecordsToReturn) == 0: # still nothing!?
                 #is this dash-separated?
                 if "-" in query.Tag:
@@ -225,12 +224,12 @@ def FindRecommendations(query, tfidf, numberOfRecommendations):
                     for part in parts:
                         possibleMeaning = query.FindAbbreviationMeaningInSource(part)
                         if possibleMeaning:
-                            diseaseRecordsToReturn.update(tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations))
+                            diseaseRecordsToReturn.update(tfidf.FindClosestMatches(possibleMeaning, numberOfRecommendations, minimumGoodnessScore))
 
                     # STILL nothing!?!  Just try straight-up looking at the
                     # text.
                     for part in parts: 
-                        diseaseRecordsToReturn.update(tfidf.FindClosestMatches(part, numberOfRecommendations))
+                        diseaseRecordsToReturn.update(tfidf.FindClosestMatches(part, numberOfRecommendations, minimumGoodnessScore))
 
     return diseaseRecordsToReturn
 

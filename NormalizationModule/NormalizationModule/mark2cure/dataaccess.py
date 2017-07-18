@@ -4,6 +4,14 @@ import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
+from app.models import MatchRecord
+from enum import Enum
+
+class MatchStrength(Enum):
+    NoMatch = -1
+    PoorMatch = 0
+    PartialMatch = 1
+    PerfectMatch = 2
 
 
 def RandomlySelectFile(directoryPath):
@@ -20,7 +28,15 @@ def GetRandomAnnotation():
     annotation = annotations[randInt]
 
     passageText = annotation.xpath("../../text/text()")
+    documentId = int(tree.xpath(".//document/id/text()")[0])
     annotationText = annotation.xpath("text()")
+    annotationId = int(annotation.xpath("../@id")[0])
 
-    return passageText, annotationText
+    return passageText, annotationText, documentId, annotationId
 
+def SaveMatchRecordForNoMatches(documentId, annotationId):
+    matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, MatchStrength = MatchStrength.NoMatch.value)
+    matchRecord.save()
+
+def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
+    return

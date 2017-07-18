@@ -29,7 +29,7 @@ background-color:yellow;
         {% for match in matches %}
             <p>
                 {{match.1}}
-                <select id="match_{{match.0|urlencode}}" name="match_{{match.0|urlencode}}">
+                <select id="{{match.0}}" name="{{match.0}}">
                     {% for dropDownOption in dropDownOptions %}
                         <option value="{{dropDownOption.0}}">{{dropDownOption.1}}</option>
                     {% endfor %}
@@ -38,5 +38,7 @@ background-color:yellow;
         {% endfor %}
         <input type="submit" name="choose_how_well" value="Submit"/>
         <input type="hidden" name="annotationText" value="{{annotationText}}"/>
+        <input type="hidden" name="annotationId" value="{{annotationId}}"/>
+        <input type="hidden" name="documentId" value="{{documentId}}"/>
      </form>
 {% endblock %}

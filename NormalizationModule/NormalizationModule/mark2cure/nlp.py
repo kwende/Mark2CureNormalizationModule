@@ -13,7 +13,6 @@ import numpy as np
 import os.path
 from nltk.metrics import *
 from app.models import DODRecord, MeshRecord
-from django.db.models import Q
 
 class DiseaseRecord:
 
@@ -135,71 +134,6 @@ class TFIDF:
                         matchedLines[line] = grade
 
         return matchedLines
-
-def TrimUsingOntologyDatabases(recommendationTuples):
-
-    #duplicate the list to be trimmed
-    finalList = []
-    meshToIgnore = []
-    dodToIgnore = []
-
-    for recommendation, weight in recommendationTuples.items():
-        
-        bestMeshFamilyMember = ""
-        bestDODFamilyMember = ""
-
-        if not recommendation in meshToIgnore:
-            bestMeshScore = 0
-
-            # is there a matching mesh record? 
-            meshRecords = MeshRecord.objects.filter(Name = recommendation)
-            for meshRecord in meshRecords:
-
-                # prepare for finding the best of any family. 
-                bestMeshScore = weight
-                bestMeshFamilyMember = recommendation
-
-                # get the whole family for this phrase
-                if not meshRecord.IsSynonym:
-                    parentMeshId = meshRecord.MeshId
-                else:
-                    parentMeshId = meshRecord.ParentMeshId
-                family = MeshRecord.objects.filter(Q(MeshId = parentMeshId) | Q(ParentMeshId = parentMeshId))
-
-                # find the highest weighted family member also in this list.
-                for member in family:
-                    if member.Name in recommendationTuples and recommendationTuples[member.Name] > bestMeshScore:
-                        # if we found one better, keep it. 
-                        bestMeshScore = recommendationTuples[member.Name]
-                        bestMeshFamilyMember = member.Name
-                    else:
-                        # otherwise, ignore this one when it comes up 
-                        meshToIgnore.append(member.Name)
-
-        if not recommendation in dodToIgnore:
-            bestDODScore = 0
-            
-            dodRecords = DODRecord.objects.filter(Name = recommendation)
-            for dodRecord in dodRecords:
-                family = DODRecord.objects.filter(DODId = dodRecord.DODId)
-                for member in family:
-                    if member.Name in recommendationTuples and recommendationTuples[member.Name] > bestDODScore:
-                        bestDODScore = recommendationTuples[member.Name]
-                        bestDODFamilyMember = member.Name
-                    else:
-                        dodToIgnore.append(member.Name)
-
-        if bestMeshFamilyMember == bestDODFamilyMember and bestMeshFamilyMember is not "" and not bestMeshFamilyMember in finalList:
-            # the same phrase is in both ontologies. 
-            finalList.append(bestMeshFamilyMember)
-        else:
-            # separate names in separate ontologies
-            if bestMeshFamilyMember is not "" and not bestMeshFamilyMember in finalList:
-                finalList.append(bestMeshFamilyMember)
-            if bestDODFamilyMember is not "" and not bestDODFamilyMember in finalList:
-                finalList.append(bestDODFamilyMember)
-
-    return finalList
 
 def FindRecommendations(query, tfidf, numberOfRecommendations, minimumGoodnessScore):
     

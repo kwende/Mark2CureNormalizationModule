@@ -22,9 +22,20 @@ def home(request):
 
         for variable in request.POST:
             if variable.startswith('match_'):
-                key = urllib.parse.unquote(variable).replace('match_', '')
-                value = request.POST[variable]
+                unquoted = urllib.parse.unquote(variable).replace('match_', '')
+                underScoreIndex = unquoted.index('_')
+                dbType = unquoted[:underScoreIndex]
 
+                key = unquoted[underScoreIndex+1:]
+                value = int(request.POST[variable])
+
+                dbRecordId = NormalizationModule.mark2cure.dataaccess.GetIdForOntologyRecord(dbType, key)
+
+                matchGoodness = NormalizationModule.mark2cure.dataaccess.MatchStrength(value)
+
+                annotationId = int(request.POST["annotationId"])
+                documentId = int(request.POST["documentId"])
+                NormalizationModule.mark2cure.dataaccess.SaveMatchRecord(annotationId, documentId, dbType, dbRecordId, 1)
                 return
 
         return HttpResponseRedirect('/thanks/')
@@ -41,7 +52,7 @@ def home(request):
             query = Mark2CureQuery(annotationText[0], passageText[0])
             recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .45)
 
-            recommendations = NormalizationModule.mark2cure.nlp.TrimUsingOntologyDatabases(recommendationsWithWeights)
+            recommendations = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
 
             if len(recommendations) == 0:
                 NormalizationModule.mark2cure.dataaccess.SaveMatchRecordForNoMatches(documentId, annotationId)
@@ -50,12 +61,14 @@ def home(request):
 
         matches = []
         for r in recommendations:
-            matches.append((r,r))
+            key = urllib.parse.quote('match_' + r[1] + '_' + r[0])
+            value = r[0]
+            matches.append((key, value))
 
         dropDownOptions = {}
-        dropDownOptions["PerfectMatch"] = "Perfect Match"
-        dropDownOptions["PartialMatch"] = "Partial Match"
-        dropDownOptions["BadMatch"] = "Bad Match"
+        dropDownOptions["2"] = "Perfect Match"
+        dropDownOptions["1"] = "Partial Match"
+        dropDownOptions["0"] = "Bad Match"
 
         return render(request,
             'app/index.html',
@@ -64,7 +77,9 @@ def home(request):
                 'matches': matches,
                 'dropDownOptions' : dropDownOptions.items(),
                 'matchCount' : len(matches),
-                'passageText' : passageText[0]
+                'passageText' : passageText[0],
+                'documentId' : documentId,
+                'annotationId' : annotationId
             })
 
 def nomatch(request):

@@ -26,7 +26,7 @@ SECRET_KEY = 'bb553e0b-da48-4459-9f65-6da9ec5e1892'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['www.ben-rush.net']
 
 
 # Application definition

@@ -42,6 +42,9 @@ def home(request):
         while True:
             passageText, annotationText, documentId, annotationId = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
+            passageText = [""]
+            annotationText = ["diabetic"]
+
             tfidf = None
             trainedPickle = path.join(getcwd(), 'trained.pickle')
             with open(trainedPickle, 'rb') as fin:

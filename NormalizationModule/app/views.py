@@ -24,21 +24,19 @@ def home(request):
             if variable.startswith('match_'):
                 unquoted = urllib.parse.unquote(variable).replace('match_', '')
                 underScoreIndex = unquoted.index('_')
-                dbType = unquoted[:underScoreIndex]
+                ontologyType = unquoted[:underScoreIndex]
 
                 key = unquoted[underScoreIndex+1:]
                 value = int(request.POST[variable])
 
-                dbRecordId = NormalizationModule.mark2cure.dataaccess.GetIdForOntologyRecord(dbType, key)
-
-                matchGoodness = NormalizationModule.mark2cure.dataaccess.MatchStrength(value)
+                dbRecordId = NormalizationModule.mark2cure.dataaccess.GetIdForOntologyRecord(ontologyType, key)
 
                 annotationId = int(request.POST["annotationId"])
                 documentId = int(request.POST["documentId"])
-                NormalizationModule.mark2cure.dataaccess.SaveMatchRecord(annotationId, documentId, dbType, dbRecordId, 1)
+                NormalizationModule.mark2cure.dataaccess.SaveMatchRecord(annotationId, documentId, ontologyType, dbRecordId, value)
                 return
 
-        return HttpResponseRedirect('/thanks/')
+        return HttpResp42onseRedirect('/thanks/')
     else:
         # continue looping until we find something for which matches are identified. 
         while True:

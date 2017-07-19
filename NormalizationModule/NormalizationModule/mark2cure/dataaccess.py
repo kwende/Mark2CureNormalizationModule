@@ -93,14 +93,15 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                     else:
                         dodToIgnore.append(member.Name)
 
-        if bestMeshFamilyMemberText == bestDODFamilyMemberText and bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in finalList:
+        justTextList = [f[0] for f in finalList]
+        if bestMeshFamilyMemberText == bestDODFamilyMemberText and bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
             # the same phrase is in both ontologies. 
             finalList.append((bestMeshFamilyMemberText, "DOD,MESH"))
         else:
             # separate names in separate ontologies
-            if bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in finalList:
+            if bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
                 finalList.append((bestMeshFamilyMemberText, "MESH"))
-            if bestDODFamilyMemberText is not "" and not bestDODFamilyMemberText in finalList:
+            if bestDODFamilyMemberText is not "" and not bestDODFamilyMemberText in justTextList:
                 finalList.append((bestDODFamilyMemberText, "DOD"))
 
     return finalList
@@ -120,4 +121,8 @@ def GetIdForOntologyRecord(ontologyType, recordText):
     return id
 
 def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
+    matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+                              MatchStrength = matchQuality, OntologyName = ontologyType, OntologyRecordId = databaseId)
+    matchRecord.save()
+
     return

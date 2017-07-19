@@ -26,10 +26,10 @@ background-color:yellow;
 
     <form method="post" action="">
         {% csrf_token %}
-        {% for match in matches %}
+        {% for match in matches %}  
             <p>
                 {{match.1}}
-                <select id="{{match.0}}" name="{{match.0}}">
+                <select name="{{match.0}}">
                     {% for dropDownOption in dropDownOptions %}
                         <option value="{{dropDownOption.0}}">{{dropDownOption.1}}</option>
                     {% endfor %}

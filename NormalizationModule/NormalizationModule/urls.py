@@ -16,4 +16,5 @@ urlpatterns = [
     url(r'^why', app.views.why, name='why'),
     url(r'^breakup', app.views.breakup, name='breakup'),
     url(r'^nomatch', app.views.nomatch, name='nomatch'),
+    url(r'^matchquality', app.views.matchquality, name='nomatch'),
 ]

@@ -15,6 +15,10 @@ import pickle
 import urllib.parse
 
 def home(request):
+    return render(request,
+                  'app/index.html')
+
+def matchquality(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
 
@@ -34,16 +38,12 @@ def home(request):
                 annotationId = int(request.POST["annotationId"])
                 documentId = int(request.POST["documentId"])
                 NormalizationModule.mark2cure.dataaccess.SaveMatchRecord(annotationId, documentId, ontologyType, dbRecordId, value)
-                return
 
-        return HttpResp42onseRedirect('/thanks/')
+        return HttpResponseRedirect('/thanks/')
     else:
         # continue looping until we find something for which matches are identified. 
         while True:
             passageText, annotationText, documentId, annotationId = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
-
-            passageText = [""]
-            annotationText = ["diabetic"]
 
             tfidf = None
             trainedPickle = path.join(getcwd(), 'trained.pickle')
@@ -72,7 +72,7 @@ def home(request):
         dropDownOptions["0"] = "Bad Match"
 
         return render(request,
-            'app/index.html',
+            'app/matchquality.html',
             {
                 'annotationText':annotationText[0],
                 'matches': matches,

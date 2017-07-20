@@ -1,7 +1,42 @@
 import json
 import lxml.etree
 from django.db import models
-from app.models import DODRecord, MeshRecord
+from app.models import DODRecord, MeshRecord, Mark2CureAnnotation, Mark2CurePassage
+
+def EnterMark2CureAnnotationFile(filePath, minimumReoccurenceCount):
+    tree = lxml.etree.parse(filePath)
+
+    documentId = int(tree.xpath(".//document/id/text()")[0])
+    passages = tree.xpath(".//document/passage")
+
+    for passage in passages:
+
+        passageText = passage.xpath(".//text/text()")[0]
+        passageId = int(passage.xpath(".//infon[@key='id']/text()")[0])
+
+        passageRecord = Mark2CurePassage(DocumentId = documentId, PassageId = passageId, PassageText = passageText)
+        passageRecord.save()
+
+        annotations = passage.xpath(".//annotation/infon[@key='type' and text() = 'disease']/..")
+
+        annotationCountDictionary = {}
+        annotationDictionary = {}
+        for annotation in annotations:
+            annotationText = annotation.xpath(".//text/text()")[0]
+            if not annotationText in annotationDictionary:
+                annotationDictionary[annotationText] = annotation
+            if not annotationText in annotationCountDictionary:
+                annotationCountDictionary[annotationText] = 1
+            else:
+                annotationCountDictionary[annotationText] = annotationCountDictionary[annotationText] + 1
+
+        for k,v in annotationDictionary.items():
+            if annotationCountDictionary[k] >= minimumReoccurenceCount:
+                annotationText = k
+                annotationId = int(v.xpath(".//@id")[0])
+                annotationRecord = Mark2CureAnnotation(DocumentId = documentId, AnnotationId = annotationId, 
+                                                       AnnotationText = annotationText, Passage = passageRecord)
+                annotationRecord.save()
 
 def BuildDODRecordsFromDisk(jsonDodFilePath):
     with open(jsonDodFilePath) as jsonFile:

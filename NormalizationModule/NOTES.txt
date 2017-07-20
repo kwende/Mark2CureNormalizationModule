@@ -17,3 +17,16 @@ django.setup()
 from app.models import *
 from NormalizationModule.mark2cure.nlp import TrainAndPickle
 TrainAndPickle('c:/users/brush/desktop/trained.pickle')
+
+Adding annotations: 
+
+import os
+os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
+import django
+django.setup()
+from app.models import *
+from NormalizationModule.mark2cure.ontologyhelper import EnterMark2CureAnnotationFile
+EnterMark2CureAnnotationFile("C:/repos/Mark2CureNormalizationModule/NormalizationModule/annotationFiles/group 26.xml", 3)
+
+
+

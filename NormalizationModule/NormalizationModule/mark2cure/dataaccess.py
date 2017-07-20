@@ -4,7 +4,7 @@ import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
-from app.models import MatchRecord, MeshRecord, DODRecord
+from app.models import MatchRecord, MeshRecord, DODRecord, Mark2CureAnnotation, Mark2CurePassage
 from enum import Enum
 from django.db import models
 from django.db.models import Q
@@ -23,18 +23,21 @@ def RandomlySelectFile(directoryPath):
     return fullFiles[randInt]
 
 def GetRandomAnnotation():
-    randFile = RandomlySelectFile(join(BASE_DIR, 'annotationFiles'))
-    tree = lxml.etree.parse(randFile)
-    annotations = tree.xpath(".//document/passage/annotation/infon[@key='type' and text() = 'disease']/../text")
-    randInt = random.randint(0, len(annotations)-1)
-    annotation = annotations[randInt]
 
-    passageText = annotation.xpath("../../text/text()")
-    documentId = int(tree.xpath(".//document/id/text()")[0])
-    annotationText = annotation.xpath("text()")
-    annotationId = int(annotation.xpath("../@id")[0])
+    allPassages = Mark2CurePassage.objects.all()
 
-    return passageText, annotationText, documentId, annotationId
+    #randFile = RandomlySelectFile(join(BASE_DIR, 'annotationFiles'))
+    #tree = lxml.etree.parse(randFile)
+    #annotations = tree.xpath(".//document/passage/annotation/infon[@key='type' and text() = 'disease']/../text")
+    #randInt = random.randint(0, len(annotations)-1)
+    #annotation = annotations[randInt]
+
+    #passageText = annotation.xpath("../../text/text()")
+    #documentId = int(tree.xpath(".//document/id/text()")[0])
+    #annotationText = annotation.xpath("text()")
+    #annotationId = int(annotation.xpath("../@id")[0])
+
+    #return passageText, annotationText, documentId, annotationId
 
 def SaveMatchRecordForNoMatches(documentId, annotationId):
     matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, MatchStrength = MatchStrength.NoMatch.value)

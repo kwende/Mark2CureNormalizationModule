@@ -24,20 +24,22 @@ def RandomlySelectFile(directoryPath):
 
 def GetRandomAnnotation():
 
-    allPassages = Mark2CurePassage.objects.all()
+    allAnnotations = Mark2CureAnnotation.objects.filter(Solved = False)
 
-    #randFile = RandomlySelectFile(join(BASE_DIR, 'annotationFiles'))
-    #tree = lxml.etree.parse(randFile)
-    #annotations = tree.xpath(".//document/passage/annotation/infon[@key='type' and text() = 'disease']/../text")
-    #randInt = random.randint(0, len(annotations)-1)
-    #annotation = annotations[randInt]
+    randInt = random.randint(0, len(allAnnotations)-1)
 
-    #passageText = annotation.xpath("../../text/text()")
-    #documentId = int(tree.xpath(".//document/id/text()")[0])
-    #annotationText = annotation.xpath("text()")
-    #annotationId = int(annotation.xpath("../@id")[0])
+    annotationToUse = allAnnotations[randInt]
 
-    #return passageText, annotationText, documentId, annotationId
+    annotationId = annotationToUse.AnnotationId
+    annotationText = annotationToUse.AnnotationText
+    passageId = annotationToUse.Passage_id
+
+    passageToUse = Mark2CurePassage.objects.filter(id = passageId)[0]
+
+    passageText = passageToUse.PassageText
+    documentId = passageToUse.DocumentId
+
+    return passageText, annotationText, documentId, annotationId
 
 def SaveMatchRecordForNoMatches(documentId, annotationId):
     matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, MatchStrength = MatchStrength.NoMatch.value)
@@ -127,5 +129,9 @@ def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQua
     matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
                               MatchStrength = matchQuality, OntologyName = ontologyType, OntologyRecordId = databaseId)
     matchRecord.save()
+
+    annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
+    annotationWeMatched.Solved = True
+    annotationWeMatched.save()
 
     return

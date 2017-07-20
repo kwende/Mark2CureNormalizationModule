@@ -33,3 +33,4 @@ class Mark2CureAnnotation(models.Model):
     AnnotationId = models.IntegerField()
     AnnotationText = models.CharField(max_length = 512)
     Passage = models.ForeignKey(Mark2CurePassage, on_delete=models.CASCADE)
+    Solved = models.BooleanField(default= False)

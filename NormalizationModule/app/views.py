@@ -50,7 +50,7 @@ def matchquality(request):
             with open(trainedPickle, 'rb') as fin:
                 tfidf = pickle.load(fin)
 
-            query = Mark2CureQuery(annotationText[0], passageText[0])
+            query = Mark2CureQuery(annotationText, passageText)
             recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .45)
 
             recommendations = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
@@ -74,11 +74,11 @@ def matchquality(request):
         return render(request,
             'app/matchquality.html',
             {
-                'annotationText':annotationText[0],
+                'annotationText':annotationText,
                 'matches': matches,
                 'dropDownOptions' : dropDownOptions.items(),
                 'matchCount' : len(matches),
-                'passageText' : passageText[0],
+                'passageText' : passageText,
                 'documentId' : documentId,
                 'annotationId' : annotationId
             })

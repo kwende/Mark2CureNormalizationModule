@@ -15,6 +15,15 @@ class MatchStrength(Enum):
     PartialMatch = 1
     PerfectMatch = 2
 
+class PartialMatchReasons(Enum):
+    AIsMoreSpecificThanB = 0
+    AIsLessSpecificThanB = 1
+    AIsACompoundTerm = 2
+
+class PoorMatchReasons(Enum):
+    AAndBAreUnrelated = 0
+    AIsACompoundTerm = 1
+
 class NonPerfectMatch:
     def __init__(self, nonPerfectMatchId, annotationText, passageText, matchStrength, ontologyText):
         self.NonPerfectMatchId = nonPerfectMatchId
@@ -144,6 +153,11 @@ def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQua
     annotationWeMatched.save()
 
     return
+
+def UpdateMatchRecordWithReason(matchRecordId, reason):
+    matchRecord = MatchRecord.objects.filter(id = matchRecordId)[0]
+    matchRecord.Reason = reason.value
+    matchRecord.save()
 
 def GetRandomNonPerfectMatch():
     unexplainedNonPerfectMatches = MatchRecord.objects.filter((Q(MatchStrength = 0) | Q(MatchStrength = 1)), Reason = -1)

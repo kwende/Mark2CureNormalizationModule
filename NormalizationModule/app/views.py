@@ -13,6 +13,7 @@ from NormalizationModule.mark2cure.nlp import DiseaseRecord, FindRecommendations
 import app.forms
 import pickle
 import urllib.parse
+from enum import Enum
 
 def home(request):
     return render(request,
@@ -84,36 +85,52 @@ def matchquality(request):
             })
 
 def explain_match(request):
-    unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomNonPerfectMatch()
 
-    annotationText = unexplainedMatch.AnnotationText
-    ontologyText = unexplainedMatch.OntologyText
+    if request.method == "POST":
+        matchRecordId = int(request.POST['MatchRecordId'])
+        matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(int(request.POST["MatchStrength"]))
+        reasonAsInt = int(request.POST["reasons"])
 
-    matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(unexplainedMatch.MatchStrength)
-    matchStrengthText = ""
+        if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
+            reason = NormalizationModule.mark2cure.dataaccess.PartialMatchReasons(reasonAsInt)
+            NormalizationModule.mark2cure.dataaccess.UpdateMatchRecordWithReason(matchRecordId, reason)
+        elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
+            reason = NormalizationModule.mark2cure.dataaccess.PoorMatchReasons(reasonAsInt)
+            NormalizationModule.mark2cure.dataaccess.UpdateMatchRecordWithReason(matchRecordId, reason)
 
-    form = None
-    if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
-        matchStrengthText = "partial match"
-        choiceList = [(0, annotationText + " is more specific than " + ontologyText), 
-                   (1, annotationText + " is less specific than " + ontologyText),
-                   (2, annotationText + " is a compound term")]
-        form = app.forms.ExplainWhyPartialForm(choices = choiceList)
-    elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
-        matchStrengthText = "poor match"
-        choiceList = [(0, annotationText + " is a compound term."), 
-                   (1, annotationText + " and " + ontologyText + " are completely unrelated")]
-        form = app.forms.ExplainWhyPoorForm(choices = choiceList)
+        return HttpResponseRedirect('/thanks/')
+    else:
+        unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomNonPerfectMatch()
 
-    return render(request, 'app/explain.html',
-                  {
-                      "matchStregthText" : matchStrengthText,
-                      "annotationText" : annotationText,
-                      "passageText" : unexplainedMatch.PassageText,
-                      "ontologyText" : unexplainedMatch.OntologyText,
-                      "matchRecordId" : unexplainedMatch.NonPerfectMatchId,
-                      "form" : form
-                  })
+        annotationText = unexplainedMatch.AnnotationText
+        ontologyText = unexplainedMatch.OntologyText
+
+        matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(unexplainedMatch.MatchStrength)
+        matchStrengthText = ""
+
+        form = None
+        if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
+            matchStrengthText = "partial match"
+            choiceList = [(NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsMoreSpecificThanB.value, annotationText + " is more specific than " + ontologyText), 
+                       (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsLessSpecificThanB.value, annotationText + " is less specific than " + ontologyText),
+                       (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term")]
+            form = app.forms.ExplainWhyPartialForm(choices = choiceList)
+        elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
+            matchStrengthText = "poor match"
+            choiceList = [(NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term."), 
+                       (NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AAndBAreUnrelated.value, annotationText + " and " + ontologyText + " are completely unrelated")]
+            form = app.forms.ExplainWhyPoorForm(choices = choiceList)
+
+        return render(request, 'app/explain.html',
+                      {
+                          "matchStrength" : unexplainedMatch.MatchStrength,
+                          "matchStregthText" : matchStrengthText,
+                          "annotationText" : annotationText,
+                          "passageText" : unexplainedMatch.PassageText,
+                          "ontologyText" : unexplainedMatch.OntologyText,
+                          "matchRecordId" : unexplainedMatch.NonPerfectMatchId,
+                          "form" : form
+                      })
 
 def thanks(request):
     return render(request, 'app/thanks.html', {})

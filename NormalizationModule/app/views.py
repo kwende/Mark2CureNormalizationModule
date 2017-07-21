@@ -52,7 +52,7 @@ def matchquality(request):
                 tfidf = pickle.load(fin)
 
             query = Mark2CureQuery(annotationText, passageText)
-            recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .45)
+            recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .5)
 
             recommendations = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
 

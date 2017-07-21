@@ -71,9 +71,7 @@
     <Content Include="annotationFiles\group 27.xml" />
     <Content Include="annotationFiles\group 28.xml" />
     <Content Include="app\templates\app\index.html" />
-    <Content Include="app\templates\app\nomatch.html" />
-    <Content Include="app\templates\app\breakup.html" />
-    <Content Include="app\templates\app\why.html" />
+    <Content Include="app\templates\app\explain.html" />
     <Content Include="app\templates\app\thanks.html" />
     <Content Include="app\templates\app\matchquality.html" />
     <Content Include="NOTES.txt" />

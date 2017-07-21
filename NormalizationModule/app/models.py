@@ -22,6 +22,7 @@ class MatchRecord(models.Model):
     OntologyName = models.CharField(max_length=128, null=True)
     OntologyRecordId = models.IntegerField(null=True)
     MatchStrength = models.IntegerField()
+    Reason = models.IntegerField(default = -1)
 
 class Mark2CurePassage(models.Model):
     DocumentId = models.IntegerField()

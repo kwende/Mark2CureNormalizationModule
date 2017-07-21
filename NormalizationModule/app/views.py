@@ -83,63 +83,37 @@ def matchquality(request):
                 'annotationId' : annotationId
             })
 
-def nomatch(request):
-    annotationText = request.GET['annotationText']
-    recommendation = request.GET['recommendation']
+def explain_match(request):
+    unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomNonPerfectMatch()
 
-    option1 = "Because '%s' and '%s' are completely unrelated" % (annotationText, recommendation)
-    option2 = "Because '%s' is a compound term and must be broken up further." % (recommendation)
+    annotationText = unexplainedMatch.AnnotationText
+    ontologyText = unexplainedMatch.OntologyText
 
-    form = app.forms.WhyPoorMatchForm(choices = [(1,option1),(2,option2)])
-    return render(request, "app/nomatch.html", 
-    {
-       'form' : form
-    })
-     
-def breakup(request):
-    if request.method == "POST":
-        return HttpResponseRedirect('/thanks/')
-    else:
-        form = app.forms.PartsForm()
-        return render(request, "app/breakup.html", 
-                      {
-                          "form" : form,
-                          "recommendation": request.GET['recommendation']
-                      })
+    matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(unexplainedMatch.MatchStrength)
+    matchStrengthText = ""
 
-def why(request):
+    form = None
+    if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
+        matchStrengthText = "partial match"
+        choiceList = [(0, annotationText + " is more specific than " + ontologyText), 
+                   (1, annotationText + " is less specific than " + ontologyText),
+                   (2, annotationText + " is a compound term")]
+        form = app.forms.ExplainWhyPartialForm(choices = choiceList)
+    elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
+        matchStrengthText = "poor match"
+        choiceList = [(0, annotationText + " is a compound term."), 
+                   (1, annotationText + " and " + ontologyText + " are completely unrelated")]
+        form = app.forms.ExplainWhyPoorForm(choices = choiceList)
 
-    if request.method == "POST":
-        
-        reason = int(request.POST['reasons'])
-        if reason == 0:
-            return HttpResponseRedirect('/thanks/')
-        elif reason == 1:
-            return HttpResponseRedirect('/thanks/')
-        elif reason == 2:
-            recommendation = request.GET['recommendation']
-            dict = QueryDict("", mutable =True)
-            dict['recommendation'] = recommendation
-            queryString = dict.urlencode()
-            return HttpResponseRedirect('/breakup/?' + queryString)
-        else:
-            return
-    else:
-        annotationText = request.GET['annotationText']
-        recommendation = request.GET['recommendation']
-
-        option1 = "Because '%s' is more specific than '%s'" % (annotationText, recommendation)
-        option2 = "Because '%s' is less specific than '%s'" % (annotationText, recommendation)
-        option3 = "Because '%s' is a compound term and must be broken up further." % (recommendation)
-
-        form = app.forms.WhyOnlyPartialMatchForm(choices = [(0, option1), (1 , option2), (2, option3)])
-        
-        return render(request, "app/why.html", 
-                      {
-                          'annotationText' : request.GET['annotationText'],
-                          'recommendation' : request.GET['recommendation'],
-                          'form' : form
-                      })
+    return render(request, 'app/explain.html',
+                  {
+                      "matchStregthText" : matchStrengthText,
+                      "annotationText" : annotationText,
+                      "passageText" : unexplainedMatch.PassageText,
+                      "ontologyText" : unexplainedMatch.OntologyText,
+                      "matchRecordId" : unexplainedMatch.NonPerfectMatchId,
+                      "form" : form
+                  })
 
 def thanks(request):
     return render(request, 'app/thanks.html', {})

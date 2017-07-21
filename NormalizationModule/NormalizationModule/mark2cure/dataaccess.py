@@ -15,6 +15,14 @@ class MatchStrength(Enum):
     PartialMatch = 1
     PerfectMatch = 2
 
+class NonPerfectMatch:
+    def __init__(self, nonPerfectMatchId, annotationText, passageText, matchStrength, ontologyText):
+        self.NonPerfectMatchId = nonPerfectMatchId
+        self.AnnotationText = annotationText
+        self.PassageText = passageText
+        self.MatchStrength = matchStrength
+        self.OntologyText = ontologyText
+
 
 def RandomlySelectFile(directoryPath):
     fullFiles = [join(directoryPath, f) for f in listdir(directoryPath) if isfile(join(directoryPath, f))]
@@ -42,7 +50,8 @@ def GetRandomAnnotation():
     return passageText, annotationText, documentId, annotationId
 
 def SaveMatchRecordForNoMatches(documentId, annotationId):
-    matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, MatchStrength = MatchStrength.NoMatch.value)
+    matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+                              MatchStrength = MatchStrength.NoMatch.value, Reason = -1)
     matchRecord.save()
 
 def TrimUsingOntologyDatabases(recommendationTuples):
@@ -127,7 +136,7 @@ def GetIdForOntologyRecord(ontologyType, recordText):
 
 def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
     matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                              MatchStrength = matchQuality, OntologyName = ontologyType, OntologyRecordId = databaseId)
+                              MatchStrength = matchQuality, OntologyName = ontologyType, OntologyRecordId = databaseId, Reason = -1)
     matchRecord.save()
 
     annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
@@ -135,3 +144,32 @@ def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQua
     annotationWeMatched.save()
 
     return
+
+def GetRandomNonPerfectMatch():
+    unexplainedNonPerfectMatches = MatchRecord.objects.filter((Q(MatchStrength = 0) | Q(MatchStrength = 1)), Reason = -1)
+
+    if len(unexplainedNonPerfectMatches) == 0:
+        return None
+    else:
+        randInt = random.randint(0, len(unexplainedNonPerfectMatches)-1)
+        unexplainedNonPerfectMatch = unexplainedNonPerfectMatches[randInt]
+
+        annotationRecord = Mark2CureAnnotation.objects.filter(AnnotationId = unexplainedNonPerfectMatch.AnnotationId)[0]
+        passageRecord = Mark2CurePassage.objects.filter(id = annotationRecord.Passage_id)[0]
+
+        ontologyName = unexplainedNonPerfectMatch.OntologyName
+        matchedOntologyText = ""
+        ontologyRecordId = unexplainedNonPerfectMatch.OntologyRecordId
+
+        if ontologyName.lower() == "mesh":
+            matchedRecord = MeshRecord.objects.filter(id = ontologyRecordId)[0]
+            matchedOntologyText = matchedRecord.Name
+        elif ontologyName.lower() == "dod":
+            matchedReocrd = DODRecord.objects.filter(id = ontologyRecordId)[0]
+            matchedOntologyText = matchedRecord.Name
+        #TODO: else throw exception
+       
+        unexplainedMatch = NonPerfectMatch(unexplainedNonPerfectMatch.id, annotationRecord.AnnotationText, 
+                                           passageRecord.PassageText, unexplainedNonPerfectMatch.MatchStrength,
+                                           matchedOntologyText)
+        return unexplainedMatch

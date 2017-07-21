@@ -1,0 +1,32 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+
+<script src="../../static/app/scripts/jquery-1.10.2.js"></script>
+
+<style>
+.highlight
+{
+background-color:yellow;
+}
+</style>
+
+<h2>Annotation '{{annotationText}}'</h2>
+<h3>Passage:</h3> <span id="passageTextSpan">{{passageText}}</span>
+<script>
+    $(document).ready(function () {
+        var t = $("#passageTextSpan").html();
+            t = t.replace("{{annotationText}}", "<span class='highlight'>{{annotationText}}</span>");
+            $("#passageTextSpan").html(t)
+    }); 
+    </script>
+<br/><br/><br/>
+
+<p>Explain why <b>{{ontologyText}}</b> is only a <i>{{matchStregthText}}</i> for <b>{{annotationText}}</b></p>
+
+<form method="post" action="">
+    {{form}}
+    <input type="submit" value="submit" />
+</form>
+
+{% endblock %}

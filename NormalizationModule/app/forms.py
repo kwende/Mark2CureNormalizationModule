@@ -12,37 +12,24 @@ class RecommendationSelectForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop('choices', None)
-
         super(RecommendationSelectForm, self).__init__(*args, **kwargs)
-
         if choices is not None:
             self.fields['recommendations'].choices = choices
 
-class WhyPoorMatchForm(forms.Form):
-    reasons = forms.ChoiceField(label="Choices:", choices=[], widget=forms.RadioSelect())
+class ExplainWhyPoorForm(forms.Form):
+    reasons = forms.ChoiceField(required = True, label="Reasons:", choices=[], widget=forms.RadioSelect())
 
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop('choices', None)
-
-        super(WhyPoorMatchForm, self).__init__(*args, **kwargs)
-
+        super(ExplainWhyPoorForm, self).__init__(*args, **kwargs)
         if choices is not None:
             self.fields['reasons'].choices = choices
 
-class WhyOnlyPartialMatchForm(forms.Form):
-    reasons = forms.ChoiceField(label="Choices:", choices=[], widget=forms.RadioSelect())
+class ExplainWhyPartialForm(forms.Form):
+    reasons = forms.ChoiceField(required = True, label="Reasons:", choices=[], widget=forms.RadioSelect())
 
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop('choices', None)
-
-        super(WhyOnlyPartialMatchForm, self).__init__(*args, **kwargs)
-
+        super(ExplainWhyPartialForm, self).__init__(*args, **kwargs)
         if choices is not None:
             self.fields['reasons'].choices = choices
-
-class PartsForm(forms.Form):
-    part1 = forms.CharField(required=True, widget=forms.TextInput())
-    part2 = forms.CharField(required=True, widget=forms.TextInput())
-    part3 = forms.CharField(required=False, widget=forms.TextInput())
-    part4 = forms.CharField(required=False, widget=forms.TextInput())
-    part5 = forms.CharField(required=False, widget=forms.TextInput())

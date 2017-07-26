@@ -72,6 +72,14 @@ def matchquality(request):
         dropDownOptions["1"] = "Partial Match"
         dropDownOptions["0"] = "Bad Match"
 
+        index = passageText.lower().index(annotationText.lower())
+        startIndex = index - 50
+        if startIndex < 0:
+            startIndex = 0
+        endIndex = index + 50
+        if endIndex >= len(passageText):
+            endIndex = len(passageText)-1
+
         return render(request,
             'app/matchquality.html',
             {
@@ -79,7 +87,7 @@ def matchquality(request):
                 'matches': matches,
                 'dropDownOptions' : dropDownOptions.items(),
                 'matchCount' : len(matches),
-                'passageText' : passageText,
+                'passageText' : "[...]" + passageText[startIndex:endIndex] + "[...]",
                 'documentId' : documentId,
                 'annotationId' : annotationId
             })

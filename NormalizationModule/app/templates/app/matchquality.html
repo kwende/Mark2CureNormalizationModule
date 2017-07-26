@@ -4,23 +4,15 @@
 
 <script src="../../static/app/scripts/jquery-1.10.2.js"></script>
 
-<style>
-.highlight
-{
-background-color:yellow;
-}
-</style>
-
 <h2>Annotation '{{annotationText}}'</h2>
-<h3>Passage:</h3> <span id="passageTextSpan">{{passageText}}</span>
-<script>
-    $(document).ready(function () {
-        var t = $("#passageTextSpan").html();
-            t = t.replace("{{annotationText}}", "<span class='highlight'>{{annotationText}}</span>");
-            $("#passageTextSpan").html(t)
-    }); 
+<a href="#" id="clickToExpand">Help</a> <div style="display:none" id="toggleMe">{{passageText}}</div>
 
+<script>
+    $('#clickToExpand').click(function(){
+        $('#toggleMe').slideToggle('slow');
+    });
 </script>
+
 <br/><br/><br/>
 <p style="font-weight:700">The ontology database entries we matched: </p>
 

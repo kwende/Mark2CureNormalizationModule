@@ -101,11 +101,6 @@ class TFIDF:
                 rawLinesAdded.append(diseaseRecord.Line)
                 linesAlreadyAdded.append(lineToAdd)
 
-                if diseaseRecord.Line == "Ischemia":
-                    print("found Ischemia as " + lineToAdd)
-                elif diseaseRecord.Line == "ischemia":
-                    print("found ischemia as " + lineToAdd)
-
         self.Model = self.Vectorizer.fit_transform(self.Corpus)
         self.Lines = rawLinesAdded
 

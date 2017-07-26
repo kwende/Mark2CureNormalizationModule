@@ -14,6 +14,7 @@ import app.forms
 import pickle
 import urllib.parse
 from enum import Enum
+import operator
 
 def home(request):
     return render(request,
@@ -53,6 +54,14 @@ def matchquality(request):
 
             query = Mark2CureQuery(annotationText, passageText)
             recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .5)
+
+            sortedList = sorted(recommendationsWithWeights.items(), key=operator.itemgetter(1), reverse = True)
+            if len(sortedList) > 2:
+                sortedList = sortedList[-2:]
+
+            recommendationsWithWeights = {}
+            for i in sortedList:
+                recommendationsWithWeights[i[0]] = i[1]
 
             recommendations = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
 

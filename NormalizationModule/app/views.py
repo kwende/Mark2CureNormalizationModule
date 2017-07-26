@@ -47,9 +47,6 @@ def matchquality(request):
         while True:
             passageText, annotationText, documentId, annotationId = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
-            annotationText = "paraplegia"
-            passageText = "blah blah blah paraplegia blah blah blah"
-
             tfidf = None
             trainedPickle = path.join(getcwd(), 'trained.pickle')
             with open(trainedPickle, 'rb') as fin:

@@ -47,6 +47,9 @@ def matchquality(request):
         while True:
             passageText, annotationText, documentId, annotationId = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
 
+            annotationText = "paraplegia"
+            passageText = "blah blah blah paraplegia blah blah blah"
+
             tfidf = None
             trainedPickle = path.join(getcwd(), 'trained.pickle')
             with open(trainedPickle, 'rb') as fin:
@@ -57,7 +60,7 @@ def matchquality(request):
 
             sortedList = sorted(recommendationsWithWeights.items(), key=operator.itemgetter(1), reverse = True)
             if len(sortedList) > 2:
-                sortedList = sortedList[-2:]
+                sortedList = sortedList[0:2]
 
             recommendationsWithWeights = {}
             for i in sortedList:

@@ -73,10 +73,11 @@ def TrimUsingOntologyDatabases(recommendationTuples):
     for recommendation, weight in recommendationTuples.items():
         
         bestMeshFamilyMemberText = ""
+        bestMeshScore = 0
         bestDODFamilyMemberText = ""
+        bestDODScore = 0
 
         if not recommendation in meshToIgnore:
-            bestMeshScore = 0
 
             # is there a matching mesh record? 
             meshRecords = MeshRecord.objects.filter(Name = recommendation)
@@ -104,7 +105,6 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                         meshToIgnore.append(member.Name)
 
         if not recommendation in dodToIgnore:
-            bestDODScore = 0
             
             dodRecords = DODRecord.objects.filter(Name = recommendation)
             for dodRecord in dodRecords:
@@ -119,13 +119,13 @@ def TrimUsingOntologyDatabases(recommendationTuples):
         justTextList = [f[0] for f in finalList]
         if bestMeshFamilyMemberText == bestDODFamilyMemberText and bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
             # the same phrase is in both ontologies. 
-            finalList.append((bestMeshFamilyMemberText, "DOD,MESH"))
+            finalList.append((bestMeshFamilyMemberText, "DOD,MESH", bestMeshScore if bestMeshScore > bestDODScore else bestDODScore))
         else:
             # separate names in separate ontologies
             if bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
-                finalList.append((bestMeshFamilyMemberText, "MESH"))
+                finalList.append((bestMeshFamilyMemberText, "MESH", bestMeshScore))
             if bestDODFamilyMemberText is not "" and not bestDODFamilyMemberText in justTextList:
-                finalList.append((bestDODFamilyMemberText, "DOD"))
+                finalList.append((bestDODFamilyMemberText, "DOD", bestDODScore))
 
     return finalList
 

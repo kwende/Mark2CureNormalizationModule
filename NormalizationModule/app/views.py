@@ -16,6 +16,8 @@ import urllib.parse
 from enum import Enum
 import operator
 
+MaximumNumberOfOptionsToDisplay = 3
+
 def home(request):
     return render(request,
                   'app/index.html')
@@ -55,23 +57,19 @@ def matchquality(request):
             query = Mark2CureQuery(annotationText, passageText)
             recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .5)
 
-            sortedList = sorted(recommendationsWithWeights.items(), key=operator.itemgetter(1), reverse = True)
-            if len(sortedList) > 2:
-                sortedList = sortedList[0:2]
+            recommendationsWithWeights = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
+            
+            sortedList = sorted(recommendationsWithWeights, key=operator.itemgetter(2), reverse = True)
+            if len(sortedList) > MaximumNumberOfOptionsToDisplay:
+                sortedList = sortedList[0:MaximumNumberOfOptionsToDisplay]
 
-            recommendationsWithWeights = {}
-            for i in sortedList:
-                recommendationsWithWeights[i[0]] = i[1]
-
-            recommendations = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
-
-            if len(recommendations) == 0:
+            if len(recommendationsWithWeights) == 0:
                 NormalizationModule.mark2cure.dataaccess.SaveMatchRecordForNoMatches(documentId, annotationId)
             else:
                 break
 
         matches = []
-        for r in recommendations:
+        for r in sortedList:
             key = urllib.parse.quote('match_' + r[1] + '_' + r[0])
             value = r[0]
             matches.append((key, value))

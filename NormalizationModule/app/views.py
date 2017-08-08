@@ -72,7 +72,7 @@ def matchquality(request):
         for r in sortedList:
             key = urllib.parse.quote('match_' + r[1] + '_' + r[0])
             value = r[0]
-            matches.append((key, value))
+            matches.append((key, value, r[1], r[3]))
 
         dropDownOptions = {}
         dropDownOptions["2"] = "Perfect Match"

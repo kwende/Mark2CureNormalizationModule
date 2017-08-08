@@ -20,7 +20,13 @@
         {% csrf_token %}
         {% for match in matches %}  
             <p>
-                {{match.1}}
+                {% if match.2 == "DOD" %}
+                    <a href="https://bioportal.bioontology.org/ontologies/DOID?p=classes&conceptid={{match.3}}" target="_blank">
+                        {{match.1}}
+                    </a>
+                {% else %}
+                    <a href="https://meshb.nlm.nih.gov/record/ui?ui={{match.3}}" target="_blank">{{match.1}}</a>
+                {% endif %}
                 <select name="{{match.0}}">
                     {% for dropDownOption in dropDownOptions %}
                         <option value="{{dropDownOption.0}}">{{dropDownOption.1}}</option>

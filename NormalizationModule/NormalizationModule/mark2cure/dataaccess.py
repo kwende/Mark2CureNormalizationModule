@@ -74,8 +74,10 @@ def TrimUsingOntologyDatabases(recommendationTuples):
         
         bestMeshFamilyMemberText = ""
         bestMeshScore = 0
+        bestMeshId = ""
         bestDODFamilyMemberText = ""
         bestDODScore = 0
+        bestDODId = ""
 
         if not recommendation in meshToIgnore:
 
@@ -86,6 +88,7 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                 # prepare for finding the best of any family. 
                 bestMeshScore = weight
                 bestMeshFamilyMemberText = recommendation
+                bestMeshId = meshRecord.MeshId
 
                 # get the whole family for this phrase
                 if not meshRecord.IsSynonym:
@@ -100,6 +103,7 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                         # if we found one better, keep it. 
                         bestMeshScore = recommendationTuples[member.Name]
                         bestMeshFamilyMemberText = member.Name
+                        bestMeshId = member.MeshId
                     else:
                         # otherwise, ignore this one when it comes up 
                         meshToIgnore.append(member.Name)
@@ -113,19 +117,20 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                     if member.Name in recommendationTuples and recommendationTuples[member.Name] > bestDODScore:
                         bestDODScore = recommendationTuples[member.Name]
                         bestDODFamilyMemberText = member.Name
+                        bestDODId = member.DODId
                     else:
                         dodToIgnore.append(member.Name)
 
         justTextList = [f[0] for f in finalList]
         if bestMeshFamilyMemberText == bestDODFamilyMemberText and bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
             # the same phrase is in both ontologies. 
-            finalList.append((bestMeshFamilyMemberText, "DOD,MESH", bestMeshScore if bestMeshScore > bestDODScore else bestDODScore))
+            finalList.append((bestMeshFamilyMemberText, "DOD,MESH", bestMeshScore if bestMeshScore > bestDODScore else bestDODScore, bestMeshId))
         else:
             # separate names in separate ontologies
             if bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
-                finalList.append((bestMeshFamilyMemberText, "MESH", bestMeshScore))
+                finalList.append((bestMeshFamilyMemberText, "MESH", bestMeshScore, bestMeshId))
             if bestDODFamilyMemberText is not "" and not bestDODFamilyMemberText in justTextList:
-                finalList.append((bestDODFamilyMemberText, "DOD", bestDODScore))
+                finalList.append((bestDODFamilyMemberText, "DOD", bestDODScore, bestDODId))
 
     return finalList
 

@@ -88,7 +88,11 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                 # prepare for finding the best of any family. 
                 bestMeshScore = weight
                 bestMeshFamilyMemberText = recommendation
-                bestMeshId = meshRecord.MeshId
+
+                if not meshRecord.ParentMeshId == None:
+                    bestMeshId = meshRecord.ParentMeshId
+                else:
+                    bestMeshId = meshRecord.MeshId
 
                 # get the whole family for this phrase
                 if not meshRecord.IsSynonym:
@@ -103,7 +107,11 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                         # if we found one better, keep it. 
                         bestMeshScore = recommendationTuples[member.Name]
                         bestMeshFamilyMemberText = member.Name
-                        bestMeshId = member.MeshId
+
+                        if not member.ParentMeshId == None:
+                            bestMeshId = member.ParentMeshId
+                        else:
+                            bestMeshId = member.MeshId
                     else:
                         # otherwise, ignore this one when it comes up 
                         meshToIgnore.append(member.Name)

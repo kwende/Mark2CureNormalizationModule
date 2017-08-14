@@ -8,6 +8,7 @@ from app.models import MatchRecord, MeshRecord, DODRecord, Mark2CureAnnotation, 
 from enum import Enum
 from django.db import models
 from django.db.models import Q
+from django.conf import settings
 
 class MatchStrength(Enum):
     NoMatch = -1
@@ -35,7 +36,7 @@ class NonPerfectMatch:
 
 def RandomlySelectFile(directoryPath):
     fullFiles = [join(directoryPath, f) for f in listdir(directoryPath) if isfile(join(directoryPath, f))]
-    randInt = random.randint(0, len(fullFiles)-1)
+    randInt = random.randint(0, len(fullFiles) - 1)
 
     return fullFiles[randInt]
 
@@ -43,7 +44,7 @@ def GetRandomAnnotation():
 
     allAnnotations = Mark2CureAnnotation.objects.filter(Solved = False)
 
-    randInt = random.randint(0, len(allAnnotations)-1)
+    randInt = random.randint(0, len(allAnnotations) - 1)
 
     annotationToUse = allAnnotations[randInt]
 
@@ -81,11 +82,11 @@ def TrimUsingOntologyDatabases(recommendationTuples):
 
         if not recommendation in meshToIgnore:
 
-            # is there a matching mesh record? 
+            # is there a matching mesh record?
             meshRecords = MeshRecord.objects.filter(Name = recommendation)
             for meshRecord in meshRecords:
 
-                # prepare for finding the best of any family. 
+                # prepare for finding the best of any family.
                 bestMeshScore = weight
                 bestMeshFamilyMemberText = recommendation
 
@@ -104,7 +105,7 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                 # find the highest weighted family member also in this list.
                 for member in family:
                     if member.Name in recommendationTuples and recommendationTuples[member.Name] > bestMeshScore:
-                        # if we found one better, keep it. 
+                        # if we found one better, keep it.
                         bestMeshScore = recommendationTuples[member.Name]
                         bestMeshFamilyMemberText = member.Name
 
@@ -113,7 +114,7 @@ def TrimUsingOntologyDatabases(recommendationTuples):
                         else:
                             bestMeshId = member.MeshId
                     else:
-                        # otherwise, ignore this one when it comes up 
+                        # otherwise, ignore this one when it comes up
                         meshToIgnore.append(member.Name)
 
         if not recommendation in dodToIgnore:
@@ -131,7 +132,7 @@ def TrimUsingOntologyDatabases(recommendationTuples):
 
         justTextList = [f[0] for f in finalList]
         if bestMeshFamilyMemberText == bestDODFamilyMemberText and bestMeshFamilyMemberText is not "" and not bestMeshFamilyMemberText in justTextList:
-            # the same phrase is in both ontologies. 
+            # the same phrase is in both ontologies.
             finalList.append((bestMeshFamilyMemberText, "DOD,MESH", bestMeshScore if bestMeshScore > bestDODScore else bestDODScore, bestMeshId))
         else:
             # separate names in separate ontologies
@@ -158,12 +159,19 @@ def GetIdForOntologyRecord(ontologyType, recordText):
 
 def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
     matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                              MatchStrength = matchQuality, OntologyName = ontologyType, OntologyRecordId = databaseId, Reason = -1)
+                              MatchStrength = matchQuality, OntologyName = ontologyType, 
+                              OntologyRecordId = databaseId, Reason = -1)
     matchRecord.save()
 
-    annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
-    annotationWeMatched.Solved = True
-    annotationWeMatched.save()
+    # how many people have looked at this? 
+    count = MatchRecord.objects.filter(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+                               OntologyName = ontologyType, OntologyRecordId = databaseId).count()
+    
+    # if there is enough, then let it be done. 
+    if count >= settings.REQUIRED_VIEWS:
+        annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
+        annotationWeMatched.Solved = True
+        annotationWeMatched.save()
 
     return
 
@@ -178,7 +186,7 @@ def GetRandomNonPerfectMatch():
     if len(unexplainedNonPerfectMatches) == 0:
         return None
     else:
-        randInt = random.randint(0, len(unexplainedNonPerfectMatches)-1)
+        randInt = random.randint(0, len(unexplainedNonPerfectMatches) - 1)
         unexplainedNonPerfectMatch = unexplainedNonPerfectMatches[randInt]
 
         annotationRecord = Mark2CureAnnotation.objects.filter(AnnotationId = unexplainedNonPerfectMatch.AnnotationId)[0]

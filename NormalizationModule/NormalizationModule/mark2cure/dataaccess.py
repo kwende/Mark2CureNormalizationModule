@@ -163,12 +163,17 @@ def SaveMatchStrengthRecord(annotationId, documentId, ontologyType, databaseId, 
                               OntologyRecordId = databaseId)
     matchStrengthRecord.save()
 
-    # how many people have looked at this? 
-    count = MatchStrengthRecord.objects.filter(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                               OntologyName = ontologyType, OntologyRecordId = databaseId).count()
+    # how many people have looked at this?
+    matchStrengthRecords = MatchStrengthRecord.objects.filter(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+                               OntologyName = ontologyType, OntologyRecordId = databaseId)
     
-    # if there is enough, then let it be done. 
-    if count >= settings.REQUIRED_VIEWS:
+    # determine the match strength consensus (if any yet).
+    poorMatchCount = sum(1 for m in matchStrengthRecords if MatchStrength(m.MatchStrength) == MatchStrength.PoorMatch)
+    partialMatchCount = sum(1 for m in matchStrengthRecords if MatchStrength(m.MatchStrength) == MatchStrength.PartialMatch)
+    perfectMatchCount = sum(1 for m in matchStrengthRecords if MatchStrength(m.MatchStrength) == MatchStrength.PerfectMatch)
+
+    # if there is enough consensus, then pass to the next phase
+    if max([poorMatchCount, partialMatchCount, perfectMatchCount]) >= settings.REQUIRED_VIEWS:
         annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
         annotationWeMatched.Stage = 1
         annotationWeMatched.save()

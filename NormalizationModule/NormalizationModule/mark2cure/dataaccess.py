@@ -4,7 +4,7 @@ import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
-from app.models import MatchRecord, MeshRecord, DODRecord, Mark2CureAnnotation, Mark2CurePassage
+from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, Mark2CurePassage
 from enum import Enum
 from django.db import models
 from django.db.models import Q
@@ -42,7 +42,7 @@ def RandomlySelectFile(directoryPath):
 
 def GetRandomAnnotation():
 
-    allAnnotations = Mark2CureAnnotation.objects.filter(Solved = False)
+    allAnnotations = Mark2CureAnnotation.objects.filter(Stage = 0)
 
     randInt = random.randint(0, len(allAnnotations) - 1)
 
@@ -59,10 +59,10 @@ def GetRandomAnnotation():
 
     return passageText, annotationText, documentId, annotationId
 
-def SaveMatchRecordForNoMatches(documentId, annotationId):
-    matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                              MatchStrength = MatchStrength.NoMatch.value, Reason = -1)
-    matchRecord.save()
+def SaveMatchStrengthRecordForNoMatches(documentId, annotationId):
+    matchStrengthRecord = MatchStrengthRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+                              MatchStrength = MatchStrength.NoMatch.value)
+    matchStrengthRecord.save()
 
 def TrimUsingOntologyDatabases(recommendationTuples):
 
@@ -157,31 +157,31 @@ def GetIdForOntologyRecord(ontologyType, recordText):
 
     return id
 
-def SaveMatchRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
-    matchRecord = MatchRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+def SaveMatchStrengthRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
+    matchStrengthRecord = MatchStrengthRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
                               MatchStrength = matchQuality, OntologyName = ontologyType, 
-                              OntologyRecordId = databaseId, Reason = -1)
-    matchRecord.save()
+                              OntologyRecordId = databaseId)
+    matchStrengthRecord.save()
 
     # how many people have looked at this? 
-    count = MatchRecord.objects.filter(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
+    count = MatchStrengthRecord.objects.filter(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
                                OntologyName = ontologyType, OntologyRecordId = databaseId).count()
     
     # if there is enough, then let it be done. 
     if count >= settings.REQUIRED_VIEWS:
         annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
-        annotationWeMatched.Solved = True
+        annotationWeMatched.Stage = 1
         annotationWeMatched.save()
 
     return
 
-def UpdateMatchRecordWithReason(matchRecordId, reason):
-    matchRecord = MatchRecord.objects.filter(id = matchRecordId)[0]
-    matchRecord.Reason = reason.value
-    matchRecord.save()
+def UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason):
+    matchStrengthRecord = MatchStrengthRecord.objects.filter(id = MatchStrengthRecordId)[0]
+    matchStrengthRecord.Reason = reason.value
+    matchStrengthRecord.save()
 
 def GetRandomNonPerfectMatch():
-    unexplainedNonPerfectMatches = MatchRecord.objects.filter((Q(MatchStrength = 0) | Q(MatchStrength = 1)), Reason = -1)
+    unexplainedNonPerfectMatches = MatchStrengthRecord.objects.filter((Q(MatchStrength = 0) | Q(MatchStrength = 1)), Reason = -1)
 
     if len(unexplainedNonPerfectMatches) == 0:
         return None

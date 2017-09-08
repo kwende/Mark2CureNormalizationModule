@@ -41,7 +41,7 @@ def matchquality(request):
 
                 annotationId = int(request.POST["annotationId"])
                 documentId = int(request.POST["documentId"])
-                NormalizationModule.mark2cure.dataaccess.SaveMatchRecord(annotationId, documentId, ontologyType, dbRecordId, value)
+                NormalizationModule.mark2cure.dataaccess.SaveMatchStrengthRecord(annotationId, documentId, ontologyType, dbRecordId, value)
 
         return HttpResponseRedirect('/thanks/')
     else:
@@ -64,7 +64,7 @@ def matchquality(request):
                 sortedList = sortedList[0:MaximumNumberOfOptionsToDisplay]
 
             if len(recommendationsWithWeights) == 0:
-                NormalizationModule.mark2cure.dataaccess.SaveMatchRecordForNoMatches(documentId, annotationId)
+                NormalizationModule.mark2cure.dataaccess.SaveMatchStrengthRecordForNoMatches(documentId, annotationId)
             else:
                 break
 
@@ -102,16 +102,16 @@ def matchquality(request):
 def explain_match(request):
 
     if request.method == "POST":
-        matchRecordId = int(request.POST['MatchRecordId'])
+        MatchStrengthRecordId = int(request.POST['MatchStrengthRecordId'])
         matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(int(request.POST["MatchStrength"]))
         reasonAsInt = int(request.POST["reasons"])
 
         if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
             reason = NormalizationModule.mark2cure.dataaccess.PartialMatchReasons(reasonAsInt)
-            NormalizationModule.mark2cure.dataaccess.UpdateMatchRecordWithReason(matchRecordId, reason)
+            NormalizationModule.mark2cure.dataaccess.UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason)
         elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
             reason = NormalizationModule.mark2cure.dataaccess.PoorMatchReasons(reasonAsInt)
-            NormalizationModule.mark2cure.dataaccess.UpdateMatchRecordWithReason(matchRecordId, reason)
+            NormalizationModule.mark2cure.dataaccess.UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason)
 
         return HttpResponseRedirect('/thanks/')
     else:
@@ -143,7 +143,7 @@ def explain_match(request):
                           "annotationText" : annotationText,
                           "passageText" : unexplainedMatch.PassageText,
                           "ontologyText" : unexplainedMatch.OntologyText,
-                          "matchRecordId" : unexplainedMatch.NonPerfectMatchId,
+                          "MatchStrengthRecordId" : unexplainedMatch.NonPerfectMatchId,
                           "form" : form
                       })
 

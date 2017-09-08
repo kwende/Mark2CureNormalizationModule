@@ -16,13 +16,19 @@ class DODRecord(models.Model):
     Name = models.TextField()
     IsSynonym = models.BooleanField()
 
-class MatchRecord(models.Model):
+class MatchStrengthRecord(models.Model):
     AnnotationDocumentId = models.IntegerField()
     AnnotationId = models.IntegerField()
     OntologyName = models.CharField(max_length=128, null=True)
     OntologyRecordId = models.IntegerField(null=True)
     MatchStrength = models.IntegerField()
-    Reason = models.IntegerField(default = -1)
+
+class MatchExplanationRecord(models.Model):
+    AnnotationDocumentId = models.IntegerField()
+    AnnotationId = models.IntegerField()
+    OntologyName = models.CharField(max_length=128, null=True)
+    OntologyRecordId = models.IntegerField(null=True)
+    MatchExplanation = models.IntegerField()
 
 class Mark2CurePassage(models.Model):
     DocumentId = models.IntegerField()
@@ -34,4 +40,4 @@ class Mark2CureAnnotation(models.Model):
     AnnotationId = models.IntegerField()
     AnnotationText = models.CharField(max_length = 512)
     Passage = models.ForeignKey(Mark2CurePassage, on_delete=models.CASCADE)
-    Solved = models.BooleanField(default= False)
+    Stage = models.IntegerField(default= 0)

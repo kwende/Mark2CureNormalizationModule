@@ -115,7 +115,7 @@ def explain_match(request):
 
         return HttpResponseRedirect('/thanks/')
     else:
-        unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomNonPerfectMatch()
+        unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotationInExplanationPhase()
 
         annotationText = unexplainedMatch.AnnotationText
         ontologyText = unexplainedMatch.OntologyText

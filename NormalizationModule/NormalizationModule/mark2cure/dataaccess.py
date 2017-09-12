@@ -185,17 +185,16 @@ def UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason):
     matchStrengthRecord.Reason = reason.value
     matchStrengthRecord.save()
 
-def GetRandomNonPerfectMatch():
-    unexplainedNonPerfectMatches = MatchStrengthRecord.objects.filter((Q(MatchStrength = 0) | Q(MatchStrength = 1)), Reason = -1)
+def GetRandomAnnotationInExplanationPhase():
+    annotationsInExplanationPhase = Mark2CureAnnotation.objects.filter(Stage = 1)
 
-    if len(unexplainedNonPerfectMatches) == 0:
+    if len(annotationsInExplanationPhase) == 0:
         return None
     else:
-        randInt = random.randint(0, len(unexplainedNonPerfectMatches) - 1)
-        unexplainedNonPerfectMatch = unexplainedNonPerfectMatches[randInt]
+        randInt = random.randint(0, len(annotationsInExplanationPhase) - 1)
+        annotationInExplanationPhase = annotationsInExplanationPhase[randInt]
 
-        annotationRecord = Mark2CureAnnotation.objects.filter(AnnotationId = unexplainedNonPerfectMatch.AnnotationId)[0]
-        passageRecord = Mark2CurePassage.objects.filter(id = annotationRecord.Passage_id)[0]
+        passageRecord = Mark2CurePassage.objects.filter(id = annotationInExplanationPhase.Passage_id)[0]
 
         ontologyName = unexplainedNonPerfectMatch.OntologyName
         matchedOntologyText = ""

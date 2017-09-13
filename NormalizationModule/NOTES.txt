@@ -1,4 +1,11 @@
 To init django shell: 
+import os
+os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
+import django
+django.setup()
+from app.models import *
+
+To GetDODREcords from Disk:
 
 import os
 os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
@@ -27,6 +34,15 @@ django.setup()
 from app.models import *
 from NormalizationModule.mark2cure.ontologyhelper import EnterMark2CureAnnotationFile
 EnterMark2CureAnnotationFile("C:/repos/Mark2CureNormalizationModule/NormalizationModule/annotationFiles/group 26.xml", 3)
+
+To populate the matches from the annotations using NLP: 
+
+import os
+os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
+import django
+django.setup()
+from app.models import *
+
 
 
 

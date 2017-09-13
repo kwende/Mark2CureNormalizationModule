@@ -2,6 +2,29 @@ import json
 import lxml.etree
 from django.db import models
 from app.models import DODRecord, MeshRecord, Mark2CureAnnotation, Mark2CurePassage
+import NormalizationModule.mark2cure.dataaccess
+import NormalizationModule.mark2cure.nlp
+from NormalizationModule.mark2cure.nlp import DiseaseRecord, FindRecommendations, Mark2CureQuery, TFIDF
+
+def BuildOutMatchRecords():
+    tfidf = None
+    trainedPickle = path.join(getcwd(), 'trained.pickle')
+    with open(trainedPickle, 'rb') as fin:
+        tfidf = pickle.load(fin)
+
+    query = Mark2CureQuery(annotationText, passageText)
+    recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .5)
+
+    recommendationsWithWeights = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
+            
+    sortedList = sorted(recommendationsWithWeights, key=operator.itemgetter(2), reverse = True)
+    if len(sortedList) > MaximumNumberOfOptionsToDisplay:
+        sortedList = sortedList[0:MaximumNumberOfOptionsToDisplay]
+
+    if len(recommendationsWithWeights) == 0:
+        NormalizationModule.mark2cure.dataaccess.SaveMatchStrengthRecordForNoMatches(documentId, annotationId)
+
+
 
 def EnterMark2CureAnnotationFile(filePath, minimumReoccurenceCount):
     tree = lxml.etree.parse(filePath)

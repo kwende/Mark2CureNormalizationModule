@@ -49,10 +49,12 @@ class OntologyMatchGroup(models.Model):
 
 class OntologyMatch(models.Model):
     OntologyName = models.CharField(max_length=128)
-    OntologyRecordId = models.IntegerField()
+    OntologyRecordId = models.CharField(max_length=128)
     MatchGroup = models.ForeignKey(OntologyMatchGroup, on_delete=models.CASCADE)
     QualityConsensus = models.IntegerField(null=True)
     ReasonConsensus = models.IntegerField(null=True)
+    NLPDotProduct = models.DecimalField(decimal_places = 4, max_digits = 10, default=0)
+    ConvenienceMatchString = models.CharField(max_length=256, default="")
 
 class OntologyMatchQualitySubmission(models.Model):
     SubmittedOn = models.DateTimeField()

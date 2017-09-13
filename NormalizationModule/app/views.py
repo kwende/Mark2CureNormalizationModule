@@ -16,8 +16,6 @@ import urllib.parse
 from enum import Enum
 import operator
 
-MaximumNumberOfOptionsToDisplay = 3
-
 def home(request):
     return render(request,
                   'app/index.html')

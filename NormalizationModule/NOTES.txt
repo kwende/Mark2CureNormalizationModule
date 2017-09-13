@@ -32,7 +32,7 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
 import django
 django.setup()
 from app.models import *
-from NormalizationModule.mark2cure.ontologyhelper import EnterMark2CureAnnotationFile
+from NormalizationModule.mark2cure.dataimporter import EnterMark2CureAnnotationFile
 EnterMark2CureAnnotationFile("C:/repos/Mark2CureNormalizationModule/NormalizationModule/annotationFiles/group 26.xml", 3)
 
 To populate the matches from the annotations using NLP: 
@@ -42,7 +42,7 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
 import django
 django.setup()
 from app.models import *
-
-
+from NormalizationModule.mark2cure.dataimporter import BuildOutMatchRecords
+BuildOutMatchRecords()
 
 

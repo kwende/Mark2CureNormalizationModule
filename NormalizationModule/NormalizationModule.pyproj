@@ -35,7 +35,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NormalizationModule\mark2cure\nlp.py" />
-    <Compile Include="NormalizationModule\mark2cure\ontologyhelper.py">
+    <Compile Include="NormalizationModule\mark2cure\dataimporter.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NormalizationModule\mark2cure\__init__.py">

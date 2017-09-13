@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'NormalizationModule.mark2cure'
+    'NormalizationModule.mark2cure',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -76,6 +76,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'NormalizationModule.wsgi.application'
 
+MAXIMUM_NUMBER_OPTIONS_TO_DISPLAY = 3
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases

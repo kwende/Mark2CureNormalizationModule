@@ -32,7 +32,7 @@ def matchquality(request):
                 underScoreIndex = unquoted.index('_')
                 ontologyType = unquoted[:underScoreIndex]
 
-                key = unquoted[underScoreIndex+1:]
+                key = unquoted[underScoreIndex + 1:]
                 value = int(request.POST[variable])
 
                 dbRecordId = NormalizationModule.mark2cure.dataaccess.GetIdForOntologyRecord(ontologyType, key)
@@ -43,34 +43,18 @@ def matchquality(request):
 
         return HttpResponseRedirect('/thanks/')
     else:
-        # continue looping until we find something for which matches are identified. 
-        while True:
-            passageText, annotationText, documentId, annotationId = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotation()
+        # continue looping until we find something for which matches are
+        # identified.
+        groupToUse, passageText, annotationText, documentId, annotationId = \
+            NormalizationModule.mark2cure.dataaccess.GetRandomOntologyMatchGroup()
 
-            tfidf = None
-            trainedPickle = path.join(getcwd(), 'trained.pickle')
-            with open(trainedPickle, 'rb') as fin:
-                tfidf = pickle.load(fin)
-
-            query = Mark2CureQuery(annotationText, passageText)
-            recommendationsWithWeights = FindRecommendations(query, tfidf, 30, .5)
-
-            recommendationsWithWeights = NormalizationModule.mark2cure.dataaccess.TrimUsingOntologyDatabases(recommendationsWithWeights)
-            
-            sortedList = sorted(recommendationsWithWeights, key=operator.itemgetter(2), reverse = True)
-            if len(sortedList) > MaximumNumberOfOptionsToDisplay:
-                sortedList = sortedList[0:MaximumNumberOfOptionsToDisplay]
-
-            if len(recommendationsWithWeights) == 0:
-                NormalizationModule.mark2cure.dataaccess.SaveMatchStrengthRecordForNoMatches(documentId, annotationId)
-            else:
-                break
+        sortedList = NormalizationModule.mark2cure.dataaccess.GetSortedMatchesForMatchGroup(groupToUse, 3)
 
         matches = []
         for r in sortedList:
-            key = urllib.parse.quote('match_' + r[1] + '_' + r[0])
-            value = r[0]
-            matches.append((key, value, r[1], r[3]))
+            key = urllib.parse.quote('match_' + r.OntologyName + '_' + r.ConvenienceMatchString)
+            value = r.ConvenienceMatchString
+            matches.append((key, value, r.OntologyName, r.OntologyRecordId))
 
         dropDownOptions = {}
         dropDownOptions["2"] = "Perfect Match"
@@ -83,7 +67,7 @@ def matchquality(request):
             startIndex = 0
         endIndex = index + 50
         if endIndex >= len(passageText):
-            endIndex = len(passageText)-1
+            endIndex = len(passageText) - 1
 
         return render(request,
             'app/matchquality.html',

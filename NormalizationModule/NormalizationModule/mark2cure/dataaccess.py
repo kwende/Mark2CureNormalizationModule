@@ -4,11 +4,13 @@ import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
-from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, Mark2CurePassage
+from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, \
+    Mark2CurePassage, OntologyMatchGroup, OntologyMatch
 from enum import Enum
 from django.db import models
 from django.db.models import Q
 from django.conf import settings
+from operator import itemgetter, attrgetter, methodcaller
 
 class MatchStrength(Enum):
     NoMatch = -1
@@ -40,6 +42,23 @@ def RandomlySelectFile(directoryPath):
 
     return fullFiles[randInt]
 
+def GetSortedMatchesForMatchGroup(matchGroup, maxToDisplay):
+    sortedList = OntologyMatch.objects.filter(MatchGroup__id = matchGroup.id).order_by('-NLPDotProduct')
+    return list(sortedList)
+
+def GetRandomOntologyMatchGroup():
+    annotations = Mark2CureAnnotation.objects.filter(Stage = 0)
+    randInt = random.randint(0, len(annotations) - 1)
+    annotationToUse = annotations[randInt]
+
+    matchGroupToUse = OntologyMatchGroup.objects.get(Annotation = annotationToUse)
+
+    passageId = annotationToUse.Passage_id
+    passageToUse = Mark2CurePassage.objects.get(id = passageId)
+    documentId = passageToUse.DocumentId
+
+    return matchGroupToUse, passageToUse.PassageText, annotationToUse.AnnotationText, documentId, annotationToUse.id
+
 def GetRandomAnnotation():
 
     allAnnotations = Mark2CureAnnotation.objects.filter(Stage = 0)
@@ -63,6 +82,10 @@ def SaveMatchStrengthRecordForNoMatches(documentId, annotationId):
     matchStrengthRecord = MatchStrengthRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
                               MatchStrength = MatchStrength.NoMatch.value)
     matchStrengthRecord.save()
+
+    annotationWithNoMatches = Mark2CureAnnotation.objects.get(id = annotationId)
+    annotationWithNoMatches.Stage = -1
+    annotationWithNoMatches.save()
 
 def TrimUsingOntologyDatabases(recommendationTuples):
 

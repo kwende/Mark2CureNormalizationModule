@@ -26,25 +26,23 @@ def matchquality(request):
 
     if request.method == "POST":
 
+        matchGroupId = request.POST["matchGroupId"]
+        matchGroupSubmission = NormalizationModule.mark2cure.dataaccess.CreateOntologyMatchSubmission("NOWHEREMAN", matchGroupId)
+
         for variable in request.POST:
             if variable.startswith('match_'):
-                unquoted = urllib.parse.unquote(variable).replace('match_', '')
-                underScoreIndex = unquoted.index('_')
-                ontologyType = unquoted[:underScoreIndex]
 
-                key = unquoted[underScoreIndex + 1:]
-                value = int(request.POST[variable])
+                unquoted = urllib.parse.unquote(variable).replace('match_','')
+                matchId = int(unquoted)
+                matchStrength = int(request.POST[variable])
 
-                dbRecordId = NormalizationModule.mark2cure.dataaccess.GetIdForOntologyRecord(ontologyType, key)
+                NormalizationModule.mark2cure.dataaccess.CreateOntologyMatchQualityForSubmission(matchGroupSubmission, \
+                    matchId, matchStrength)
 
-                annotationId = int(request.POST["annotationId"])
-                documentId = int(request.POST["documentId"])
-                NormalizationModule.mark2cure.dataaccess.SaveMatchStrengthRecord(annotationId, documentId, ontologyType, dbRecordId, value)
+        NormalizationModule.mark2cure.dataaccess.DetermineWhetherConsensusForMatchQualityMet(matchGroupId, 3)
 
         return HttpResponseRedirect('/thanks/')
     else:
-        # continue looping until we find something for which matches are
-        # identified.
         groupToUse, passageText, annotationText, documentId, annotationId = \
             NormalizationModule.mark2cure.dataaccess.GetRandomOntologyMatchGroup()
 
@@ -52,9 +50,9 @@ def matchquality(request):
 
         matches = []
         for r in sortedList:
-            key = urllib.parse.quote('match_' + r.OntologyName + '_' + r.ConvenienceMatchString)
-            value = r.ConvenienceMatchString
-            matches.append((key, value, r.OntologyName, r.OntologyRecordId))
+            key = urllib.parse.quote('match_' + str(r.id))
+            matchString = r.ConvenienceMatchString
+            matches.append((key, matchString, r.OntologyName))
 
         dropDownOptions = {}
         dropDownOptions["2"] = "Perfect Match"
@@ -78,7 +76,7 @@ def matchquality(request):
                 'matchCount' : len(matches),
                 'passageText' : "[...]" + passageText[startIndex:endIndex] + "[...]",
                 'documentId' : documentId,
-                'annotationId' : annotationId
+                'matchGroupId' : groupToUse.id
             })
 
 def explain_match(request):

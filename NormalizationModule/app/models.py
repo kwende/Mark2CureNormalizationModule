@@ -3,6 +3,7 @@ Definition of models.
 """
 
 from django.db import models
+from datetime import datetime
 
 # Create your models here.
 class MeshRecord(models.Model):
@@ -57,7 +58,7 @@ class OntologyMatch(models.Model):
     ConvenienceMatchString = models.CharField(max_length=256, default="")
 
 class OntologyMatchQualitySubmission(models.Model):
-    SubmittedOn = models.DateTimeField()
+    SubmittedOn = models.DateTimeField(default=datetime.now, blank=True)
     SubmittedBy = models.CharField(max_length=128)
     MatchGroup = models.ForeignKey(OntologyMatchGroup, on_delete=models.CASCADE)
 

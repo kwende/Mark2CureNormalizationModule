@@ -5,7 +5,7 @@ from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
 from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, \
-    Mark2CurePassage, OntologyMatchGroup, OntologyMatch
+    Mark2CurePassage, OntologyMatchGroup, OntologyMatch, OntologyMatchQualitySubmission, OntologyMatchQuality
 from enum import Enum
 from django.db import models
 from django.db.models import Q
@@ -35,6 +35,40 @@ class NonPerfectMatch:
         self.MatchStrength = matchStrength
         self.OntologyText = ontologyText
 
+def DetermineWhetherConsensusForMatchQualityMet(matchGroupId, minAmountForConsensus):
+    ontologyMatchGroup = OntologyMatchGroup.objects.get(id = matchGroupId)
+    ontologyMatches = OntologyMatch.objects.filter(MatchGroup = ontologyMatchGroup)
+
+    consensusForAllMet = True
+    for ontologyMatch in ontologyMatches:
+        ontologyMatchQualityResponses = OntologyMatchQuality.objects.filter(Match = ontologyMatch)
+
+        numberOfPoor = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PoorMatch.value])
+        numberOfPartial = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PartialMatch.value])
+        numberOfPerfect = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PerfectMatch.value])
+
+        if numberOfPoor < minAmountForConsensus and numberOfPartial < minAmountForConsensus \
+           and numberOfPerfect < minAmountForConsensus:
+            consensusForAllMet = False
+            break
+
+    if consensusForAllMet:
+        annotation = Mark2CureAnnotation.objects.get(id == ontologyMatchGroup.Annotation.id)
+        annotation.Stage = 1
+        annotation.save()
+
+def CreateOntologyMatchQualityForSubmission(submission, matchId, matchStrength):
+    match = OntologyMatch.objects.get(id = matchId)
+
+    ontologyMatchQuality = OntologyMatchQuality(Submission = submission, Match = match, MatchStrength = matchStrength)
+    ontologyMatchQuality.save()
+
+def CreateOntologyMatchSubmission(userName, matchGroupId):
+    matchGroup = OntologyMatchGroup.objects.get(id = matchGroupId)
+    matchGroupSubmission = OntologyMatchQualitySubmission(SubmittedBy = userName, MatchGroup = matchGroup)
+    matchGroupSubmission.save()
+
+    return matchGroupSubmission
 
 def RandomlySelectFile(directoryPath):
     fullFiles = [join(directoryPath, f) for f in listdir(directoryPath) if isfile(join(directoryPath, f))]

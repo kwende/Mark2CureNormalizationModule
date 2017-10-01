@@ -5,7 +5,8 @@ from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
 from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, \
-    Mark2CurePassage, OntologyMatchGroup, OntologyMatch, OntologyMatchQualitySubmission, OntologyMatchQuality
+    Mark2CurePassage, OntologyMatchGroup, OntologyMatch, OntologyMatchQualitySubmission, OntologyMatchQuality, \
+    OntologyMatchQualityConsensus
 from enum import Enum
 from django.db import models
 from django.db.models import Q
@@ -40,6 +41,7 @@ def DetermineWhetherConsensusForMatchQualityMet(matchGroupId, minAmountForConsen
     ontologyMatches = OntologyMatch.objects.filter(MatchGroup = ontologyMatchGroup)
 
     consensusForAllMet = True
+    consensus = {}
     for ontologyMatch in ontologyMatches:
         ontologyMatchQualityResponses = OntologyMatchQuality.objects.filter(Match = ontologyMatch)
 
@@ -47,15 +49,24 @@ def DetermineWhetherConsensusForMatchQualityMet(matchGroupId, minAmountForConsen
         numberOfPartial = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PartialMatch.value])
         numberOfPerfect = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PerfectMatch.value])
 
-        if numberOfPoor < minAmountForConsensus and numberOfPartial < minAmountForConsensus \
-           and numberOfPerfect < minAmountForConsensus:
+        values = [numberOfPoor, numberOfPartial, numberOfPerfect]
+        maxIndex, maxValue = max(enumerate(values), key=itemgetter(1))
+
+        if maxValue < minAmountForConsensus:
             consensusForAllMet = False
             break
+        else:
+            # 0 for poor, 1 for partial, 2 for perfect
+            consensus[ontologyMatch] = maxIndex
 
     if consensusForAllMet:
         annotation = Mark2CureAnnotation.objects.get(id = ontologyMatchGroup.Annotation.id)
         annotation.Stage = 1
         annotation.save()
+
+        for key,value in consensus.items():
+            consensus = OntologyMatchQualityConsensus(Match = key, MatchStrength = value)
+            consensus.save()
 
 def CreateOntologyMatchQualityForSubmission(submission, matchId, matchStrength):
     match = OntologyMatch.objects.get(id = matchId)
@@ -81,7 +92,7 @@ def GetSortedMatchesForMatchGroup(matchGroup, maxToDisplay):
     return list(sortedList)
 
 def GetRandomOntologyMatchGroup():
-    annotations = Mark2CureAnnotation.objects.filter(Stage = 0)
+    annotations = Mark2CureAnnotation.objects.filter(id = 33443)
     randInt = random.randint(0, len(annotations) - 1)
     annotationToUse = annotations[randInt]
 

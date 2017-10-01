@@ -27,7 +27,8 @@ def matchquality(request):
     if request.method == "POST":
 
         matchGroupId = request.POST["matchGroupId"]
-        matchGroupSubmission = NormalizationModule.mark2cure.dataaccess.CreateOntologyMatchSubmission("NOWHEREMAN", matchGroupId)
+        matchGroupSubmission = NormalizationModule.mark2cure.dataaccess.CreateOntologyMatchSubmission("NOWHEREMAN", \
+            matchGroupId)
 
         for variable in request.POST:
             if variable.startswith('match_'):
@@ -97,35 +98,38 @@ def explain_match(request):
     else:
         unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotationInExplanationPhase()
 
-        annotationText = unexplainedMatch.AnnotationText
-        ontologyText = unexplainedMatch.OntologyText
+        if unexplainedMatch != None:
+            annotationText = unexplainedMatch.AnnotationText
+            ontologyText = unexplainedMatch.OntologyText
 
-        matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(unexplainedMatch.MatchStrength)
-        matchStrengthText = ""
+            matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(unexplainedMatch.MatchStrength)
+            matchStrengthText = ""
 
-        form = None
-        if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
-            matchStrengthText = "partial match"
-            choiceList = [(NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsMoreSpecificThanB.value, annotationText + " is more specific than " + ontologyText), 
-                       (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsLessSpecificThanB.value, annotationText + " is less specific than " + ontologyText),
-                       (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term")]
-            form = app.forms.ExplainWhyPartialForm(choices = choiceList)
-        elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
-            matchStrengthText = "poor match"
-            choiceList = [(NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term."), 
-                       (NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AAndBAreUnrelated.value, annotationText + " and " + ontologyText + " are completely unrelated")]
-            form = app.forms.ExplainWhyPoorForm(choices = choiceList)
+            form = None
+            if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
+                matchStrengthText = "partial match"
+                choiceList = [(NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsMoreSpecificThanB.value, annotationText + " is more specific than " + ontologyText), 
+                           (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsLessSpecificThanB.value, annotationText + " is less specific than " + ontologyText),
+                           (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term")]
+                form = app.forms.ExplainWhyPartialForm(choices = choiceList)
+            elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
+                matchStrengthText = "poor match"
+                choiceList = [(NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term."), 
+                           (NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AAndBAreUnrelated.value, annotationText + " and " + ontologyText + " are completely unrelated")]
+                form = app.forms.ExplainWhyPoorForm(choices = choiceList)
 
-        return render(request, 'app/explain.html',
-                      {
-                          "matchStrength" : unexplainedMatch.MatchStrength,
-                          "matchStregthText" : matchStrengthText,
-                          "annotationText" : annotationText,
-                          "passageText" : unexplainedMatch.PassageText,
-                          "ontologyText" : unexplainedMatch.OntologyText,
-                          "MatchStrengthRecordId" : unexplainedMatch.NonPerfectMatchId,
-                          "form" : form
+            return render(request, 'app/explain.html',
+                          {
+                              "matchStrength" : unexplainedMatch.MatchStrength,
+                              "matchStregthText" : matchStrengthText,
+                              "annotationText" : annotationText,
+                              "passageText" : unexplainedMatch.PassageText,
+                              "ontologyText" : unexplainedMatch.OntologyText,
+                              "MatchStrengthRecordId" : unexplainedMatch.NonPerfectMatchId,
+                              "form" : form
                       })
+        else:
+            return render(request, 'app/nothingToExplain.html')
 
 def thanks(request):
     return render(request, 'app/thanks.html', {})

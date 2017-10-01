@@ -72,6 +72,9 @@
     <Content Include="annotationFiles\group 28.xml" />
     <Content Include="app\templates\app\index.html" />
     <Content Include="app\templates\app\explain.html" />
+    <Content Include="app\templates\app\nothingToExplain.html">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="app\templates\app\thanks.html" />
     <Content Include="app\templates\app\matchquality.html" />
     <Content Include="NOTES.txt" />

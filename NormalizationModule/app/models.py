@@ -68,4 +68,7 @@ class OntologyMatchQuality(models.Model):
     MatchStrength = models.IntegerField()
 
 class OntologyMatchQualityReason(models.Model):
-    QualityConsensus = models.ForeignKey(OntologyMatch, on_delete=models.CASCADE)
+    SubmittedOn = models.DateTimeField(default=datetime.now, blank=True)
+    SubmittedBy = models.CharField(max_length=128, default="NOWHEREMAN")
+    MatchQuality = models.ForeignKey(OntologyMatchQuality, on_delete=models.CASCADE, null=True)
+    Reason = models.IntegerField(default=-1)

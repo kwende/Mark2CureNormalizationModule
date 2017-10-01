@@ -53,7 +53,7 @@ def DetermineWhetherConsensusForMatchQualityMet(matchGroupId, minAmountForConsen
             break
 
     if consensusForAllMet:
-        annotation = Mark2CureAnnotation.objects.get(id == ontologyMatchGroup.Annotation.id)
+        annotation = Mark2CureAnnotation.objects.get(id = ontologyMatchGroup.Annotation.id)
         annotation.Stage = 1
         annotation.save()
 

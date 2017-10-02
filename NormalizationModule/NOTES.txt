@@ -45,4 +45,12 @@ from app.models import *
 from NormalizationModule.mark2cure.dataimporter import BuildOutMatchRecords
 BuildOutMatchRecords()
 
+# to reset the databases.
+import os
+os.environ["DJANGO_SETTINGS_MODULE"] = "NormalizationModule.settings"
+import django
+django.setup()
+from app.models import *
+from NormalizationModule.mark2cure.dataimporter import ResetMark2CureDatabases
+ResetMark2CureDatabases()
 

@@ -1,7 +1,8 @@
 import json
 import lxml.etree
 from django.db import models
-from app.models import DODRecord, MeshRecord, Mark2CureAnnotation, Mark2CurePassage, OntologyMatchGroup, OntologyMatch
+from app.models import DODRecord, MeshRecord, Mark2CureAnnotation, Mark2CurePassage, OntologyMatchGroup, OntologyMatch, OntologyMatchQualitySubmission, \
+    OntologyMatchQuality, OntologyMatchQualityConsensus, OntologyMatchQualityConsensusReason, OntologyMatchQualityConsensusReasonConsensus
 import NormalizationModule.mark2cure.dataaccess
 import NormalizationModule.mark2cure.nlp
 from NormalizationModule.mark2cure.nlp import DiseaseRecord, FindRecommendations, Mark2CureQuery, TFIDF
@@ -10,6 +11,22 @@ import pickle
 import operator
 from NormalizationModule.settings import MAXIMUM_NUMBER_OPTIONS_TO_DISPLAY
 import datetime
+from django.db.models import Q
+
+def ResetMark2CureDatabases():
+
+    allAnnotations = Mark2CureAnnotation.objects.filter(~Q(Stage = -1))
+    for annotation in allAnnotations:
+        annotation.Stage = 0
+        annotation.save()
+
+    OntologyMatchQualitySubmission.objects.all().delete()
+    OntologyMatchQuality.objects.all().delete()
+
+    OntologyMatchQualityConsensus.objects.all().delete()
+    OntologyMatchQualityConsensusReason.objects.all().delete()
+
+    OntologyMatchQualityConsensusReasonConsensus.objects.all().delete()
 
 def BuildOutMatchRecords():
 

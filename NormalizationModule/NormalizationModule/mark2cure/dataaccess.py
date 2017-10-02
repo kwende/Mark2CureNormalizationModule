@@ -23,10 +23,12 @@ class PartialMatchReasons(Enum):
     AIsMoreSpecificThanB = 0
     AIsLessSpecificThanB = 1
     AIsACompoundTerm = 2
+    MatchAssessmentRejected = 3
 
 class PoorMatchReasons(Enum):
     AAndBAreUnrelated = 0
     AIsACompoundTerm = 1
+    MatchAssessmentRejected = 2
 
 class NonPerfectMatch:
     def __init__(self, matchQualityId, annotationText, passageText, matchStrength, ontologyText):

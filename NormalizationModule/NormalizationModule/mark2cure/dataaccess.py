@@ -6,7 +6,7 @@ import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
 from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, \
     Mark2CurePassage, OntologyMatchGroup, OntologyMatch, OntologyMatchQualitySubmission, OntologyMatchQuality, \
-    OntologyMatchQualityConsensus
+    OntologyMatchQualityConsensus, OntologyMatchQualityConsensusReason, OntologyMatchQualityConsensusReasonConsensus
 from enum import Enum
 from django.db import models
 from django.db.models import Q
@@ -248,11 +248,6 @@ def SaveMatchStrengthRecord(annotationId, documentId, ontologyType, databaseId, 
 
     return
 
-def UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason):
-    matchStrengthRecord = MatchStrengthRecord.objects.filter(id = MatchStrengthRecordId)[0]
-    matchStrengthRecord.Reason = reason.value
-    matchStrengthRecord.save()
-
 def GetRandomMatchQualityConsensus():
 
     matchQualitiesToExplain = OntologyMatchQualityConsensus.objects.filter(ReasonConfirmed = False)
@@ -269,30 +264,34 @@ def GetRandomMatchQualityConsensus():
                                         match.ConvenienceMatchString)
     return unexplainedMatch
 
-#def GetRandomAnnotationInExplanationPhase():
-#    annotationsInExplanationPhase = Mark2CureAnnotation.objects.filter(Stage = 1)
+def SaveOntologyMatchQualityConsensusReason(matchQualityConsensusId, reasonAsInt, submittedBy):
 
-#    if len(annotationsInExplanationPhase) == 0:
-#        return None
-#    else:
-#        randInt = random.randint(0, len(annotationsInExplanationPhase) - 1)
-#        annotationInExplanationPhase = annotationsInExplanationPhase[randInt]
+    matchQualityConsensus = OntologyMatchQualityConsensus.objects.get(id = matchQualityConsensusId)
 
-#        passageRecord = Mark2CurePassage.objects.filter(id = annotationInExplanationPhase.Passage_id)[0]
+    matchQualityConsensusReason = OntologyMatchQualityConsensusReason(SubmittedBy = submittedBy, MatchQualityConsensus = matchQualityConsensus, \
+        Reason = reasonAsInt)
+    matchQualityConsensusReason.save()
 
-#        ontologyName = unexplainedNonPerfectMatch.OntologyName
-#        matchedOntologyText = ""
-#        ontologyRecordId = unexplainedNonPerfectMatch.OntologyRecordId
+def DetermineWhetherConsensusForMatchQualityConsensusReasonMet(matchQualityConsensusId, minAmountForConsensus):
 
-#        if ontologyName.lower() == "mesh":
-#            matchedRecord = MeshRecord.objects.filter(id = ontologyRecordId)[0]
-#            matchedOntologyText = matchedRecord.Name
-#        elif ontologyName.lower() == "dod":
-#            matchedReocrd = DODRecord.objects.filter(id = ontologyRecordId)[0]
-#            matchedOntologyText = matchedRecord.Name
-#        #TODO: else throw exception
-       
-#        unexplainedMatch = NonPerfectMatch(unexplainedNonPerfectMatch.id, annotationRecord.AnnotationText, 
-#                                           passageRecord.PassageText, unexplainedNonPerfectMatch.MatchStrength,
-#                                           matchedOntologyText)
-#        return unexplainedMatch
+    matchQualityConensusReasons = OntologyMatchQualityConsensusReason.objects.filter(MatchQualityConsensus__id = matchQualityConsensusId)
+
+    #I don't care what TYPE of match it is, just whether a consensus was made. Depending on the type, 
+    # the range of responses is 0-1, or 0-2. Just aggregate them al. 
+    reason0 = len([o for o in matchQualityConensusReasons if o.Reason ==0])
+    reason1 = len([o for o in matchQualityConensusReasons if o.Reason == 1])
+    reason2 = len([o for o in matchQualityConensusReasons if o.Reason == 2])
+
+    values = [reason0, reason1, reason2]
+    maxIndex, maxValue = max(enumerate(values), key=itemgetter(1))
+
+    if maxValue >= minAmountForConsensus:
+        #consensus has been made
+        # get the OntologyMatchQualityConsensus associated with these guys and
+        # set ReasonConfirmed = True
+        consensus = OntologyMatchQualityConsensus.objects.get(id = matchQualityConensusReasons[0].MatchQualityConsensus.id)
+        consensus.ReasonConfirmed = True
+        consensus.save()
+
+        reasonConsensus = OntologyMatchQualityConsensusReasonConsensus(MatchQualityConsensus = consensus, Reason = maxIndex)
+        reasonConsensus.save()

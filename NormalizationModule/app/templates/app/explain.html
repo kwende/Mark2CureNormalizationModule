@@ -28,8 +28,8 @@ background-color:yellow;
     {% csrf_token %}
     {{form}}
     <input type="submit" value="submit" />
-    <input type="hidden" name="MatchStrengthRecordId" value="{{MatchStrengthRecordId}}"/>
-    <input type="hidden" name="MatchStrength" value="{{matchStrength}}"/>
+    <input type="hidden" name="ontologyMatchQualityConsensusId" value="{{ontologyMatchQualityConsensusId}}"/>
+    <input type="hidden" name="matchStrength" value="{{matchStrength}}"/>
 </form>
 
 {% endblock %}

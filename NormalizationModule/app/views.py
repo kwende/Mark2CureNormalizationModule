@@ -83,16 +83,18 @@ def matchquality(request):
 def explain_match(request):
 
     if request.method == "POST":
-        MatchStrengthRecordId = int(request.POST['MatchStrengthRecordId'])
-        matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(int(request.POST["MatchStrength"]))
+        matchQualityConsensusId = int(request.POST['ontologyMatchQualityConsensusId'])
+        matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(int(request.POST["matchStrength"]))
         reasonAsInt = int(request.POST["reasons"])
 
         if matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PartialMatch:
             reason = NormalizationModule.mark2cure.dataaccess.PartialMatchReasons(reasonAsInt)
-            NormalizationModule.mark2cure.dataaccess.UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason)
+            NormalizationModule.mark2cure.dataaccess.SaveOntologyMatchQualityConsensusReason(matchQualityConsensusId, reason.value, "NOWHEREMAN")
         elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
             reason = NormalizationModule.mark2cure.dataaccess.PoorMatchReasons(reasonAsInt)
-            NormalizationModule.mark2cure.dataaccess.UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason)
+            NormalizationModule.mark2cure.dataaccess.SaveOntologyMatchQualityConsensusReason(matchQualityConsensusId, reason.value, "NOWHEREMAN")
+
+        NormalizationModule.mark2cure.dataaccess.DetermineWhetherConsensusForMatchQualityConsensusReasonMet(matchQualityConsensusId, 3)
 
         return HttpResponseRedirect('/thanks/')
     else:
@@ -125,7 +127,7 @@ def explain_match(request):
                               "annotationText" : annotationText,
                               "passageText" : matchQualityToExplain.PassageText,
                               "ontologyText" : matchQualityToExplain.OntologyText,
-                              "OntologyMatchQualityConsensusId" : matchQualityToExplain.MatchQualityId,
+                              "ontologyMatchQualityConsensusId" : matchQualityToExplain.MatchQualityId,
                               "form" : form
                       })
         else:

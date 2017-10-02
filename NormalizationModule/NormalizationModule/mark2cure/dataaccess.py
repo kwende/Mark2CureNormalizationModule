@@ -29,8 +29,8 @@ class PoorMatchReasons(Enum):
     AIsACompoundTerm = 1
 
 class NonPerfectMatch:
-    def __init__(self, nonPerfectMatchId, annotationText, passageText, matchStrength, ontologyText):
-        self.NonPerfectMatchId = nonPerfectMatchId
+    def __init__(self, matchQualityId, annotationText, passageText, matchStrength, ontologyText):
+        self.MatchQualityId = matchQualityId
         self.AnnotationText = annotationText
         self.PassageText = passageText
         self.MatchStrength = matchStrength
@@ -253,30 +253,46 @@ def UpdateMatchStrengthRecordWithReason(MatchStrengthRecordId, reason):
     matchStrengthRecord.Reason = reason.value
     matchStrengthRecord.save()
 
-def GetRandomAnnotationInExplanationPhase():
-    annotationsInExplanationPhase = Mark2CureAnnotation.objects.filter(Stage = 1)
+def GetRandomMatchQualityConsensus():
 
-    if len(annotationsInExplanationPhase) == 0:
-        return None
-    else:
-        randInt = random.randint(0, len(annotationsInExplanationPhase) - 1)
-        annotationInExplanationPhase = annotationsInExplanationPhase[randInt]
+    matchQualitiesToExplain = OntologyMatchQualityConsensus.objects.filter(ReasonConfirmed = False)
 
-        passageRecord = Mark2CurePassage.objects.filter(id = annotationInExplanationPhase.Passage_id)[0]
+    randInt = random.randint(0, len(matchQualitiesToExplain) - 1)
+    randomMatchQualityToExplain = matchQualitiesToExplain[randInt]
 
-        ontologyName = unexplainedNonPerfectMatch.OntologyName
-        matchedOntologyText = ""
-        ontologyRecordId = unexplainedNonPerfectMatch.OntologyRecordId
+    match = randomMatchQualityToExplain.Match
+    m2cAnnotation = match.MatchGroup.Annotation
+    passage = m2cAnnotation.Passage
 
-        if ontologyName.lower() == "mesh":
-            matchedRecord = MeshRecord.objects.filter(id = ontologyRecordId)[0]
-            matchedOntologyText = matchedRecord.Name
-        elif ontologyName.lower() == "dod":
-            matchedReocrd = DODRecord.objects.filter(id = ontologyRecordId)[0]
-            matchedOntologyText = matchedRecord.Name
-        #TODO: else throw exception
+    unexplainedMatch = NonPerfectMatch(randomMatchQualityToExplain.id, m2cAnnotation.AnnotationText, 
+                                        passage.PassageText, randomMatchQualityToExplain.MatchStrength,
+                                        match.ConvenienceMatchString)
+    return unexplainedMatch
+
+#def GetRandomAnnotationInExplanationPhase():
+#    annotationsInExplanationPhase = Mark2CureAnnotation.objects.filter(Stage = 1)
+
+#    if len(annotationsInExplanationPhase) == 0:
+#        return None
+#    else:
+#        randInt = random.randint(0, len(annotationsInExplanationPhase) - 1)
+#        annotationInExplanationPhase = annotationsInExplanationPhase[randInt]
+
+#        passageRecord = Mark2CurePassage.objects.filter(id = annotationInExplanationPhase.Passage_id)[0]
+
+#        ontologyName = unexplainedNonPerfectMatch.OntologyName
+#        matchedOntologyText = ""
+#        ontologyRecordId = unexplainedNonPerfectMatch.OntologyRecordId
+
+#        if ontologyName.lower() == "mesh":
+#            matchedRecord = MeshRecord.objects.filter(id = ontologyRecordId)[0]
+#            matchedOntologyText = matchedRecord.Name
+#        elif ontologyName.lower() == "dod":
+#            matchedReocrd = DODRecord.objects.filter(id = ontologyRecordId)[0]
+#            matchedOntologyText = matchedRecord.Name
+#        #TODO: else throw exception
        
-        unexplainedMatch = NonPerfectMatch(unexplainedNonPerfectMatch.id, annotationRecord.AnnotationText, 
-                                           passageRecord.PassageText, unexplainedNonPerfectMatch.MatchStrength,
-                                           matchedOntologyText)
-        return unexplainedMatch
+#        unexplainedMatch = NonPerfectMatch(unexplainedNonPerfectMatch.id, annotationRecord.AnnotationText, 
+#                                           passageRecord.PassageText, unexplainedNonPerfectMatch.MatchStrength,
+#                                           matchedOntologyText)
+#        return unexplainedMatch

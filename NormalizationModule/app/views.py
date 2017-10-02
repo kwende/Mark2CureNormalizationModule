@@ -96,13 +96,13 @@ def explain_match(request):
 
         return HttpResponseRedirect('/thanks/')
     else:
-        unexplainedMatch = NormalizationModule.mark2cure.dataaccess.GetRandomAnnotationInExplanationPhase()
+        matchQualityToExplain = NormalizationModule.mark2cure.dataaccess.GetRandomMatchQualityConsensus()
 
-        if unexplainedMatch != None:
-            annotationText = unexplainedMatch.AnnotationText
-            ontologyText = unexplainedMatch.OntologyText
+        if matchQualityToExplain != None:
+            annotationText = matchQualityToExplain.AnnotationText
+            ontologyText = matchQualityToExplain.OntologyText
 
-            matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(unexplainedMatch.MatchStrength)
+            matchStrength = NormalizationModule.mark2cure.dataaccess.MatchStrength(matchQualityToExplain.MatchStrength)
             matchStrengthText = ""
 
             form = None
@@ -120,12 +120,12 @@ def explain_match(request):
 
             return render(request, 'app/explain.html',
                           {
-                              "matchStrength" : unexplainedMatch.MatchStrength,
+                              "matchStrength" : matchQualityToExplain.MatchStrength,
                               "matchStregthText" : matchStrengthText,
                               "annotationText" : annotationText,
-                              "passageText" : unexplainedMatch.PassageText,
-                              "ontologyText" : unexplainedMatch.OntologyText,
-                              "MatchStrengthRecordId" : unexplainedMatch.NonPerfectMatchId,
+                              "passageText" : matchQualityToExplain.PassageText,
+                              "ontologyText" : matchQualityToExplain.OntologyText,
+                              "OntologyMatchQualityConsensusId" : matchQualityToExplain.MatchQualityId,
                               "form" : form
                       })
         else:

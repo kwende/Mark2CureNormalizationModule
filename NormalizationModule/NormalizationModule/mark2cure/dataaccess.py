@@ -102,7 +102,7 @@ def GetSortedMatchesForMatchGroup(matchGroup, maxToDisplay):
     return list(sortedList)
 
 def GetRandomOntologyMatchGroup():
-    annotations = Mark2CureAnnotation.objects.filter(id = 33443)
+    annotations = Mark2CureAnnotation.objects.filter(Stage = 0)
     randInt = random.randint(0, len(annotations) - 1)
     annotationToUse = annotations[randInt]
 

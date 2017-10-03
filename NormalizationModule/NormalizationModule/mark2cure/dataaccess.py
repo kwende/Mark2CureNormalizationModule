@@ -23,12 +23,12 @@ class PartialMatchReasons(Enum):
     AIsMoreSpecificThanB = 0
     AIsLessSpecificThanB = 1
     AIsACompoundTerm = 2
-    MatchAssessmentRejected = 3
+    MatchAssessmentRejected = 99
 
 class PoorMatchReasons(Enum):
     AAndBAreUnrelated = 0
     AIsACompoundTerm = 1
-    MatchAssessmentRejected = 2
+    MatchAssessmentRejected = 99
 
 class NonPerfectMatch:
     def __init__(self, matchQualityId, annotationText, passageText, matchStrength, ontologyText):
@@ -70,6 +70,10 @@ def DetermineWhetherConsensusForMatchQualityMet(matchGroupId, minAmountForConsen
             consensus = OntologyMatchQualityConsensus(Match = key, MatchStrength = value)
             consensus.save()
 
+            match = consensus.Match
+            match.QualityConsensus = value
+            match.save()
+
 def CreateOntologyMatchQualityForSubmission(submission, matchId, matchStrength):
     match = OntologyMatch.objects.get(id = matchId)
 
@@ -90,7 +94,7 @@ def RandomlySelectFile(directoryPath):
     return fullFiles[randInt]
 
 def GetSortedMatchesForMatchGroup(matchGroup, maxToDisplay):
-    sortedList = OntologyMatch.objects.filter(MatchGroup__id = matchGroup.id).order_by('-NLPDotProduct')
+    sortedList = OntologyMatch.objects.filter(MatchGroup__id = matchGroup.id, QualityConsensus = None).order_by('-NLPDotProduct')
     return list(sortedList)
 
 def GetRandomOntologyMatchGroup():
@@ -283,17 +287,45 @@ def DetermineWhetherConsensusForMatchQualityConsensusReasonMet(matchQualityConse
     reason0 = len([o for o in matchQualityConensusReasons if o.Reason ==0])
     reason1 = len([o for o in matchQualityConensusReasons if o.Reason == 1])
     reason2 = len([o for o in matchQualityConensusReasons if o.Reason == 2])
+    rejected = len([o for o in matchQualityConensusReasons if o.Reason == 99])
 
-    values = [reason0, reason1, reason2]
+    values = [reason0, reason1, reason2, rejected]
     maxIndex, maxValue = max(enumerate(values), key=itemgetter(1))
 
     if maxValue >= minAmountForConsensus:
+            
         #consensus has been made
-        # get the OntologyMatchQualityConsensus associated with these guys and
-        # set ReasonConfirmed = True
-        consensus = OntologyMatchQualityConsensus.objects.get(id = matchQualityConensusReasons[0].MatchQualityConsensus.id)
-        consensus.ReasonConfirmed = True
-        consensus.save()
+        if maxIndex == 3:
+            consensus = matchQualityConensusReasons[0].MatchQualityConsensus
+            matchAssociatedWithConsensus = consensus.Match
+            responsesContributingToConsensus = OntologyMatchQuality.objects.filter(Match = matchAssociatedWithConsensus)
+            responsesToConsensus = OntologyMatchQualityConsensusReason.objects.filter(MatchQualityConsensus = consensus)
 
-        reasonConsensus = OntologyMatchQualityConsensusReasonConsensus(MatchQualityConsensus = consensus, Reason = maxIndex)
-        reasonConsensus.save()
+            responsesContributingToConsensus.delete()
+            responsesToConsensus.delete()
+            consensus.delete()
+
+            annotation = consensus.Match.MatchGroup.Annotation
+
+            annotationToReset = Mark2CureAnnotation.objects.get(id = annotation.id)
+
+            # reset. we should just view the rejected ones, not all of the associated options. 
+            matchAssociatedWithConsensus.QualityConsensus = None
+            matchAssociatedWithConsensus.ReasonConsensus = None
+            matchAssociatedWithConsensus.save()
+
+            annotationToReset.Stage = 0
+            annotationToReset.save()
+        else:
+            # get the OntologyMatchQualityConsensus associated with these guys and
+            # set ReasonConfirmed = True
+            consensus = OntologyMatchQualityConsensus.objects.get(id = matchQualityConensusReasons[0].MatchQualityConsensus.id)
+            consensus.ReasonConfirmed = True
+            consensus.save()
+
+            match = consensus.Match
+            match.ReasonConsensus = maxIndex
+            match.save()
+
+            reasonConsensus = OntologyMatchQualityConsensusReasonConsensus(MatchQualityConsensus = consensus, Reason = maxIndex)
+            reasonConsensus.save()

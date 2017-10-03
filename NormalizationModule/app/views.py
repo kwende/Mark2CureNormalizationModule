@@ -112,12 +112,14 @@ def explain_match(request):
                 matchStrengthText = "partial match"
                 choiceList = [(NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsMoreSpecificThanB.value, annotationText + " is more specific than " + ontologyText), 
                            (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsLessSpecificThanB.value, annotationText + " is less specific than " + ontologyText),
-                           (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term")]
+                           (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term"),
+                           (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.MatchAssessmentRejected.value, "I disagree that this is a partial match.")]
                 form = app.forms.ExplainWhyPartialForm(choices = choiceList)
             elif matchStrength == NormalizationModule.mark2cure.dataaccess.MatchStrength.PoorMatch:
                 matchStrengthText = "poor match"
                 choiceList = [(NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AIsACompoundTerm.value, annotationText + " is a compound term."), 
-                           (NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AAndBAreUnrelated.value, annotationText + " and " + ontologyText + " are completely unrelated")]
+                           (NormalizationModule.mark2cure.dataaccess.PoorMatchReasons.AAndBAreUnrelated.value, annotationText + " and " + ontologyText + " are completely unrelated"),
+                           (NormalizationModule.mark2cure.dataaccess.PartialMatchReasons.MatchAssessmentRejected.value, "I disagree that this is a poor match")]
                 form = app.forms.ExplainWhyPoorForm(choices = choiceList)
 
             return render(request, 'app/explain.html',

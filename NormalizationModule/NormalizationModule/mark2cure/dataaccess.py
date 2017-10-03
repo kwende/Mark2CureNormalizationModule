@@ -4,7 +4,7 @@ import random
 from NormalizationModule.settings import BASE_DIR
 import lxml.etree
 from NormalizationModule.mark2cure.nlp import DiseaseRecord
-from app.models import MatchStrengthRecord, MeshRecord, DODRecord, Mark2CureAnnotation, \
+from app.models import MeshRecord, DODRecord, Mark2CureAnnotation, \
     Mark2CurePassage, OntologyMatchGroup, OntologyMatch, OntologyMatchQualitySubmission, OntologyMatchQuality, \
     OntologyMatchQualityConsensus, OntologyMatchQualityConsensusReason, OntologyMatchQualityConsensusReasonConsensus
 from enum import Enum
@@ -45,34 +45,38 @@ def DetermineWhetherConsensusForMatchQualityMet(matchGroupId, minAmountForConsen
     consensusForAllMet = True
     consensus = {}
     for ontologyMatch in ontologyMatches:
-        ontologyMatchQualityResponses = OntologyMatchQuality.objects.filter(Match = ontologyMatch)
+        existingConsensus = OntologyMatchQualityConsensus.objects.filter(Match = ontologyMatch)
 
-        numberOfPoor = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PoorMatch.value])
-        numberOfPartial = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PartialMatch.value])
-        numberOfPerfect = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PerfectMatch.value])
+        # is there a consensus for this one? 
+        if len(existingConsensus) == 0:
+            # nope, so investigate. 
+            ontologyMatchQualityResponses = OntologyMatchQuality.objects.filter(Match = ontologyMatch)
 
-        values = [numberOfPoor, numberOfPartial, numberOfPerfect]
-        maxIndex, maxValue = max(enumerate(values), key=itemgetter(1))
+            numberOfPoor = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PoorMatch.value])
+            numberOfPartial = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PartialMatch.value])
+            numberOfPerfect = len([o for o in ontologyMatchQualityResponses if o.MatchStrength == MatchStrength.PerfectMatch.value])
 
-        if maxValue < minAmountForConsensus:
-            consensusForAllMet = False
-            break
-        else:
-            # 0 for poor, 1 for partial, 2 for perfect
-            consensus[ontologyMatch] = maxIndex
+            values = [numberOfPoor, numberOfPartial, numberOfPerfect]
+            maxIndex, maxValue = max(enumerate(values), key=itemgetter(1))
+
+            if maxValue < minAmountForConsensus:
+                consensusForAllMet = False
+            else:
+                # 0 for poor, 1 for partial, 2 for perfect
+                consensus[ontologyMatch] = maxIndex
+
+    for key,value in consensus.items():
+        consensus = OntologyMatchQualityConsensus(Match = key, MatchStrength = value)
+        consensus.save()
+
+        match = consensus.Match
+        match.QualityConsensus = value
+        match.save()
 
     if consensusForAllMet:
         annotation = Mark2CureAnnotation.objects.get(id = ontologyMatchGroup.Annotation.id)
         annotation.Stage = 1
         annotation.save()
-
-        for key,value in consensus.items():
-            consensus = OntologyMatchQualityConsensus(Match = key, MatchStrength = value)
-            consensus.save()
-
-            match = consensus.Match
-            match.QualityConsensus = value
-            match.save()
 
 def CreateOntologyMatchQualityForSubmission(submission, matchId, matchStrength):
     match = OntologyMatch.objects.get(id = matchId)
@@ -128,15 +132,6 @@ def GetRandomAnnotation():
     documentId = passageToUse.DocumentId
 
     return passageText, annotationText, documentId, annotationId
-
-def SaveMatchStrengthRecordForNoMatches(documentId, annotationId):
-    matchStrengthRecord = MatchStrengthRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                              MatchStrength = MatchStrength.NoMatch.value)
-    matchStrengthRecord.save()
-
-    annotationWithNoMatches = Mark2CureAnnotation.objects.get(id = annotationId)
-    annotationWithNoMatches.Stage = -1
-    annotationWithNoMatches.save()
 
 def TrimUsingOntologyDatabases(recommendationTuples):
 
@@ -230,29 +225,6 @@ def GetIdForOntologyRecord(ontologyType, recordText):
             id = records[0].id
 
     return id
-
-def SaveMatchStrengthRecord(annotationId, documentId, ontologyType, databaseId, matchQuality):
-    matchStrengthRecord = MatchStrengthRecord(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                              MatchStrength = matchQuality, OntologyName = ontologyType, 
-                              OntologyRecordId = databaseId)
-    matchStrengthRecord.save()
-
-    # how many people have looked at this?
-    matchStrengthRecords = MatchStrengthRecord.objects.filter(AnnotationDocumentId = documentId, AnnotationId = annotationId, 
-                               OntologyName = ontologyType, OntologyRecordId = databaseId)
-    
-    # determine the match strength consensus (if any yet).
-    poorMatchCount = sum(1 for m in matchStrengthRecords if MatchStrength(m.MatchStrength) == MatchStrength.PoorMatch)
-    partialMatchCount = sum(1 for m in matchStrengthRecords if MatchStrength(m.MatchStrength) == MatchStrength.PartialMatch)
-    perfectMatchCount = sum(1 for m in matchStrengthRecords if MatchStrength(m.MatchStrength) == MatchStrength.PerfectMatch)
-
-    # if there is enough consensus, then pass to the next phase
-    if max([poorMatchCount, partialMatchCount, perfectMatchCount]) >= settings.REQUIRED_VIEWS:
-        annotationWeMatched = Mark2CureAnnotation.objects.filter(AnnotationId = annotationId)[0]
-        annotationWeMatched.Stage = 1
-        annotationWeMatched.save()
-
-    return
 
 def GetRandomMatchQualityConsensus():
 

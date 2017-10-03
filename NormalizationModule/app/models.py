@@ -17,13 +17,6 @@ class DODRecord(models.Model):
     Name = models.TextField()
     IsSynonym = models.BooleanField()
 
-class MatchStrengthRecord(models.Model):
-    AnnotationDocumentId = models.IntegerField()
-    AnnotationId = models.IntegerField()
-    OntologyName = models.CharField(max_length=128, null=True)
-    OntologyRecordId = models.IntegerField(null=True)
-    MatchStrength = models.IntegerField()
-
 class MatchExplanationRecord(models.Model):
     AnnotationDocumentId = models.IntegerField()
     AnnotationId = models.IntegerField()

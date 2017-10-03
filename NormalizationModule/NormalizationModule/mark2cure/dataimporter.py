@@ -15,7 +15,9 @@ from django.db.models import Q
 
 def ResetMark2CureDatabases():
 
-    allAnnotations = Mark2CureAnnotation.objects.filter(~Q(Stage = -1))
+    allAnnotations = Mark2CureAnnotation.objects.filter(~Q(Stage = -1) and ~Q(Stage = 0))
+    print("Found " + str(len(allAnnotations)) + " annotations to blank")
+
     for annotation in allAnnotations:
         annotation.Stage = 0
         annotation.save()
@@ -27,6 +29,14 @@ def ResetMark2CureDatabases():
     OntologyMatchQualityConsensusReason.objects.all().delete()
 
     OntologyMatchQualityConsensusReasonConsensus.objects.all().delete()
+
+    allOntologyMatchesToCorrect = OntologyMatch.objects.filter(~Q(QualityConsensus = None) or ~Q(ReasonConsensus = None))
+    print("Found " + str(len(allOntologyMatchesToCorrect)) + " matches to correct.")
+
+    for ontologyMatchToCorrect in allOntologyMatchesToCorrect:
+        ontologyMatchToCorrect.QualityConsensus = None
+        ontologyMatchToCorrect.ReasonConsensus = None
+        ontologyMatchToCorrect.save()
 
 def BuildOutMatchRecords():
 
